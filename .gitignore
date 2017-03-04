@@ -33,8 +33,12 @@ proguard/
 captures/
 
 # Intellij
+.idea/
 *.iml
-.idea/workspace.xml
 
 # Keystore files
 *.jks
+
+# Misc
+.DS_Store
+.externalNativeBuild
