@@ -2,6 +2,7 @@ package jp.gr.java_conf.tmatz.safeincloud_db;
 
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Test;
+
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -16,6 +17,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.KeySpec;
 import java.util.Arrays;
 import java.util.zip.InflaterInputStream;
+
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.Mac;
@@ -23,6 +25,8 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
+
+import static java.util.Arrays.copyOf;
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -76,10 +80,10 @@ public class ExampleUnitTest {
 
         dis2.close();
 
-        byte[] key3 = this.GenerateKey(pass2, salt2, 1000);
-        System.out.println("key3: " + Hex.encodeHexString(key3));
+        Key key3 = this.GenerateKey(pass2, salt2, 1000);
+        System.out.println("key3: " + Hex.encodeHexString(key3.getEncoded()));
 
-        if (!Arrays.equals(check, key3)) {
+        if (!Arrays.equals(check, key3.getEncoded())) {
             throw new Exception();
         }
 
@@ -96,7 +100,7 @@ public class ExampleUnitTest {
             if (readLength == buffer.length) {
                 System.out.print(buffer);
             } else {
-                System.out.print(Arrays.copyOf(buffer, readLength));
+                System.out.print(copyOf(buffer, readLength));
             }
         }
 
@@ -140,71 +144,69 @@ public class ExampleUnitTest {
         System.out.println();
     }
 
-    private byte[] GenerateKey(
+    private Key GenerateKey(
             final byte[] password,
             final byte[] salt,
             int iterationCount)
+            throws RuntimeException
     {
-        int keyLength = 32;
+        final int keyLength = 32;
 
         byte[] passwordInternal = password.clone();
-        byte[] saltInternal = salt.clone();
+        byte[] buffer = null;
+        try
+        {
+            SecretKeySpec keySpec = new SecretKeySpec(passwordInternal, "HmacSHA1");
+            Mac prf;
+            try {
+                prf = Mac.getInstance("HmacSHA1");
+                prf.init(keySpec);
+            } catch (InvalidKeyException e) {
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            }
 
-        SecretKeySpec keySpec = new SecretKeySpec(passwordInternal, "HmacSHA1");
-        Mac prf = null;
-        try {
-            prf = Mac.getInstance("HmacSHA1");
-            prf.init(keySpec);
-        } catch (InvalidKeyException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            int macLength = prf.getMacLength(); // 20 for SHA1
+            int bufferLength = Math.max(keyLength, macLength) + macLength - 1;
+            int macCount = bufferLength / macLength;
+            byte initialMac[] = new byte[salt.length + 4]; // salt || INT(i + 1)
+            System.arraycopy(salt, 0, initialMac, 0, salt.length);
+
+            buffer = new byte[bufferLength];
+            for (int i = 0; i < macCount; i++) {
+                macSetIndex(initialMac, i + 1);
+
+                byte mac[] = initialMac;
+                for (int j = 0; j < iterationCount; j++) {
+                    mac = prf.doFinal(mac);
+                    macXor(buffer, i * macLength, mac);
+                }
+            }
+
+            return new SecretKeySpec(Arrays.copyOf(buffer, keyLength), "AES");
         }
-
-        int hLen = prf.getMacLength(); // 20 for SHA1
-        int l = Math.max(keyLength, hLen); // 1 for 128bit (16-byte) keys
-        byte T[] = new byte[l * hLen];
-        int ti_offset = 0;
-        for (int i = 1; i <= l; i++) {
-            F(T, ti_offset, prf, saltInternal, iterationCount, i);
-            ti_offset += hLen;
-        }
-
-        return Arrays.copyOf(T, keyLength);
-    }
-
-    private void F(
-            byte[] dest,
-            int offset,
-            Mac prf,
-            byte[] salt,
-            int c,
-            int blockIndex)
-    {
-        final int hLen = prf.getMacLength();
-        byte U_r[] = new byte[hLen];
-        // U0 = S || INT (i);
-        byte U_i[] = new byte[salt.length + 4];
-        System.arraycopy(salt, 0, U_i, 0, salt.length);
-        INT(U_i, salt.length, blockIndex);
-        for (int i = 0; i < c; i++) {
-            U_i = prf.doFinal(U_i);
-            XOR(U_r, U_i);
-        }
-
-        System.arraycopy(U_r, 0, dest, offset, hLen);
-    }
-
-    private void XOR(byte[] dest, byte[] src) {
-        for (int i = 0; i < dest.length; i++) {
-            dest[i] ^= src[i];
+        finally {
+            Arrays.fill(passwordInternal, (byte)0);
+            if (buffer != null)
+            {
+                Arrays.fill(buffer, (byte)0);
+            }
         }
     }
 
-    private void INT(byte[] dest, int offset, int i) {
-        dest[offset + 0] = (byte) (i >> 24);
-        dest[offset + 1] = (byte) (i >> 16);
-        dest[offset + 2] = (byte) (i >> 8);
-        dest[offset + 3] = (byte) (i);
+    private void macXor(byte[] dest, int offset, byte[] src) {
+        for (int i = 0; i < src.length; i++) {
+            dest[i + offset] ^= src[i];
+        }
+    }
+
+    private void macSetIndex(byte[] dest, int i) {
+        dest[dest.length - 4] = (byte) (i >> 24);
+        dest[dest.length - 3] = (byte) (i >> 16);
+        dest[dest.length - 2] = (byte) (i >> 8);
+        dest[dest.length - 1] = (byte) (i);
     }
 }
