@@ -1,7 +1,13 @@
 package jp.gr.java_conf.tmatz.safeincloud_db;
 
-import org.apache.commons.codec.binary.Hex;
+import android.util.Xml;
+
+import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
+import org.xmlpull.v1.XmlPullParser;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
@@ -9,8 +15,6 @@ import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
@@ -26,13 +30,13 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import static java.util.Arrays.copyOf;
-
 /**
  * Example local unit test, which will execute on the development machine (host).
  *
  * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
  */
+@RunWith(RobolectricTestRunner.class)
+@Config(constants = BuildConfig.class)
 public class ExampleUnitTest {
     @Test
     public void openDatabase() throws Exception {
@@ -41,27 +45,27 @@ public class ExampleUnitTest {
         DataInputStream dis = new DataInputStream(is);
 
         short magic = dis.readShort();
-        System.out.println("magic: " + magic);
+        if (magic != 1285) {
+            throw new RuntimeException("unexpected magic value");
+        }
 
         byte sver = dis.readByte();
-        System.out.println("sver: " + sver);
+        if (sver != 1)
+        {
+            throw new RuntimeException("unexpected sver value");
+        }
 
         byte[] salt = this.readByteArray(dis);
-        System.out.println("salt: " + Hex.encodeHexString(salt));
-
-        // char[] password = "test".toCharArray();
-        char[] password = {0x74, 0x65, 0x73, 0x74};
-        Key key = this.getKey(password, salt, 10000);
-        // System.out.println("xxx: " + Hex.encodeHexString(key.getEncoded()));
-
         byte[] iv = this.readByteArray(dis);
-        System.out.println("iv: " + Hex.encodeHexString(iv));
-
         byte[] salt2 = this.readByteArray(dis);
-        System.out.println("checkSalt: " + Hex.encodeHexString(salt2));
-
         byte[] block = this.readByteArray(dis);
-        System.out.println("block: " + Hex.encodeHexString(block));
+
+        String passwordString = "password";
+        byte[] password = new byte[passwordString.length()];
+        for (int i = 0; i < password.length; i++) {
+            password[i] = (byte)passwordString.charAt(i);
+        }
+        Key key = this.GenerateKey(password, salt, 10000);
 
         Cipher cipher = this.getCipher(key, iv);
         byte[] secrets = cipher.doFinal(block);
@@ -70,18 +74,14 @@ public class ExampleUnitTest {
                 new ByteArrayInputStream(secrets));
 
         byte[] iv2 = this.readByteArray(dis2);
-        System.out.println("iv2: " + Hex.encodeHexString(iv2));
 
         byte[] pass2 = this.readByteArray(dis2);
-        System.out.println("pass2: " + Hex.encodeHexString(pass2));
 
         byte[] check = this.readByteArray(dis2);
-        System.out.println("check: " + Hex.encodeHexString(check));
 
         dis2.close();
 
         Key key3 = this.GenerateKey(pass2, salt2, 1000);
-        System.out.println("key3: " + Hex.encodeHexString(key3.getEncoded()));
 
         if (!Arrays.equals(check, key3.getEncoded())) {
             throw new Exception();
@@ -89,22 +89,175 @@ public class ExampleUnitTest {
 
         cipher = this.getCipher(new SecretKeySpec(pass2, "AES"), iv2);
 
-        Reader content = new InputStreamReader(
+        InputStream content =
                 new InflaterInputStream(
                         new BufferedInputStream(
-                                new CipherInputStream(dis, cipher))));
+                                new CipherInputStream(dis, cipher)));
 
-        char[] buffer = new char[1024];
-        int readLength = content.read(buffer);
-        {
-            if (readLength == buffer.length) {
-                System.out.print(buffer);
-            } else {
-                System.out.print(copyOf(buffer, readLength));
-            }
-        }
+        XmlPullParser parser = Xml.newPullParser();
+        parser.setInput(content, null);
+        Database database = readDatabase(parser);
+
+        database.dump(System.out, 0);
 
         dis.close();
+    }
+
+    private Database readDatabase(XmlPullParser parser)
+    {
+        Database database = new Database();
+
+        try {
+            parser.require(XmlPullParser.START_DOCUMENT, null, null);
+
+            while (true) {
+                int eventType = parser.next();
+                switch (eventType) {
+                    case XmlPullParser.END_DOCUMENT:
+                        return database;
+
+                    case XmlPullParser.END_TAG:
+                        parser.require(eventType, null, "database");
+                        return database;
+
+                    case XmlPullParser.START_TAG: {
+                        int depth = parser.getDepth();
+                        String name = parser.getName();
+                        switch (name) {
+                            case "database":
+                                break;
+
+                            case "label":
+                                readLabel(parser, database);
+                                break;
+
+                            case "card":
+                                readCard(parser, database);
+                                break;
+
+                            default:
+                                ignoreElement(parser, name, depth);
+                        }
+                        break;
+                    }
+
+                    case XmlPullParser.TEXT:
+                        break;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Label readLabel(XmlPullParser parser, Database database) throws Exception
+    {
+        int depth = parser.getDepth();
+        Label label = new Label(
+                parser.getAttributeValue(null, "name"),
+                parser.getAttributeValue(null, "id"),
+                parser.getAttributeValue(null, "type"));
+        database.addLabel(label);
+        ignoreElement(parser, "label", depth);
+        return label;
+    }
+
+    private Card readCard(XmlPullParser parser, Database database) throws Exception
+    {
+        String template = StringUtils.trimToEmpty(parser.getAttributeValue(null, "template"));
+        boolean isTemplate = template.equals("true");
+
+        if (isTemplate)
+        {
+            ignoreElement(parser, "card", parser.getDepth());
+            return null;
+        }
+        else
+        {
+            Card card = new Card(parser.getAttributeValue(null, "title"));
+            database.addCard(card);
+
+            while (true)
+            {
+                switch (parser.nextTag())
+                {
+                    case XmlPullParser.START_TAG: {
+                        String name = parser.getName();
+                        switch (name) {
+                            case "field":
+                                readField(parser, database, card);
+                                break;
+
+                            case "notes":
+                                readNote(parser, database, card);
+                                break;
+
+                            case "label_id":
+                                readLabelId(parser, database, card);
+                                break;
+
+                            default:
+                                ignoreElement(parser, name, parser.getDepth());
+                                break;
+                        }
+                        break;
+                    }
+
+                    default:
+                        parser.require(XmlPullParser.END_TAG, null, "card");
+                        return card;
+                }
+            }
+        }
+    }
+
+    private Field readField(XmlPullParser parser, Database database, Card card) throws Exception
+    {
+        String name = parser.getAttributeValue(null, "name");
+        String type = parser.getAttributeValue(null, "type");
+        String text = parser.nextText();
+        Field field = new Field(name, text, type);
+        card.addField(field);
+        return field;
+    }
+
+    private Note readNote(XmlPullParser parser, Database database, Card card) throws Exception
+    {
+        Note note = new Note(parser.nextText());
+        card.addNote(note);
+        return note;
+    }
+
+    private LabelId readLabelId(XmlPullParser parser, Database database, Card card) throws Exception
+    {
+        LabelId labelId = new LabelId(parser.nextText());
+        card.addLabelId(labelId);
+        return labelId;
+    }
+
+    private void ignoreElement(XmlPullParser parser, String name, int depth) throws Exception
+    {
+        while (true)
+        {
+            switch (parser.nextTag()) {
+                case XmlPullParser.END_DOCUMENT:
+                    return;
+
+                case XmlPullParser.END_TAG:
+                    if (name.equals(parser.getName()) && depth == parser.getDepth()) {
+                        return;
+                    }
+                    break;
+
+                case XmlPullParser.START_TAG:
+                    break;
+
+                default:
+                    break;
+            }
+        }
     }
 
     private byte[] readByteArray(DataInputStream is, int length) throws IOException
