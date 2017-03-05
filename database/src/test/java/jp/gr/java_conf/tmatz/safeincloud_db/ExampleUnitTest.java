@@ -1,9 +1,7 @@
 package jp.gr.java_conf.tmatz.safeincloud_db;
 
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.codec.binary.StringUtils;
 import org.junit.Test;
-
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -12,19 +10,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.security.InvalidKeyException;
 import java.security.Key;
+import java.security.NoSuchAlgorithmException;
 import java.security.spec.KeySpec;
 import java.util.Arrays;
 import java.util.zip.InflaterInputStream;
-
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
+import javax.crypto.Mac;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -32,11 +30,6 @@ import static org.junit.Assert.assertEquals;
  * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
  */
 public class ExampleUnitTest {
-    @Test
-    public void addition_isCorrect() throws Exception {
-        assertEquals(4, 2 + 2);
-    }
-
     @Test
     public void openDatabase() throws Exception {
         InputStream is = new BufferedInputStream(
@@ -52,15 +45,16 @@ public class ExampleUnitTest {
         byte[] salt = this.readByteArray(dis);
         System.out.println("salt: " + Hex.encodeHexString(salt));
 
-        String password = "test";
-        Key key = this.getKey(password.toCharArray(), salt, 10000);
+        // char[] password = "test".toCharArray();
+        char[] password = {0x74, 0x65, 0x73, 0x74};
+        Key key = this.getKey(password, salt, 10000);
         // System.out.println("xxx: " + Hex.encodeHexString(key.getEncoded()));
 
         byte[] iv = this.readByteArray(dis);
         System.out.println("iv: " + Hex.encodeHexString(iv));
 
         byte[] salt2 = this.readByteArray(dis);
-        System.out.println("salt2: " + Hex.encodeHexString(salt2));
+        System.out.println("checkSalt: " + Hex.encodeHexString(salt2));
 
         byte[] block = this.readByteArray(dis);
         System.out.println("block: " + Hex.encodeHexString(block));
@@ -82,79 +76,29 @@ public class ExampleUnitTest {
 
         dis2.close();
 
-        Key key2 = this.getKey(StringUtils.newStringUsAscii(pass2).toCharArray(), salt2, 1000);
-        System.out.println("key2: " + Hex.encodeHexString(key2.getEncoded()));
+        byte[] key3 = this.GenerateKey(pass2, salt2, 1000);
+        System.out.println("key3: " + Hex.encodeHexString(key3));
 
-        if (!Arrays.equals(check, key2.getEncoded()))
-        {
+        if (!Arrays.equals(check, key3)) {
             throw new Exception();
         }
 
-        key2 = new SecretKeySpec(pass2, "AES");
-        cipher = this.getCipher(key2, iv2);
+        cipher = this.getCipher(new SecretKeySpec(pass2, "AES"), iv2);
 
-//        byte[] buffer = new byte[20];
-//        int readLength = dis.read(buffer);
-//        while (readLength > 0)
-//        {
-//            byte[] output = cipher.update(buffer, 0, readLength);
-//
-//            System.out.println(Hex.encodeHexString(output));
-//
-//            readLength = dis.read(buffer);
-//        }
-//
-//        byte[] output = cipher.doFinal();
-//        System.out.println(Hex.encodeHexString(output));
-
-//        byte[] gzipHeader =
-//        {
-//            (byte)0x1f, // ID1
-//            (byte)0x8b, // ID2
-//            (byte)0x08, // CM
-//            (byte)0x00, // FLG
-//            (byte)0x00, // MTIME
-//            (byte)0x00,
-//            (byte)0x00,
-//            (byte)0x00,
-//            (byte)0x00, // XLF
-//            (byte)0x00, // OS
-//        };
-//
         Reader content = new InputStreamReader(
-            new InflaterInputStream(
-                new BufferedInputStream(
-                    new CipherInputStream(dis, cipher))));
+                new InflaterInputStream(
+                        new BufferedInputStream(
+                                new CipherInputStream(dis, cipher))));
 
         char[] buffer = new char[1024];
         int readLength = content.read(buffer);
         {
-            if (readLength == buffer.length)
-            {
+            if (readLength == buffer.length) {
                 System.out.print(buffer);
-            }
-            else {
+            } else {
                 System.out.print(Arrays.copyOf(buffer, readLength));
             }
         }
-
-//        InputStream content =
-//                new CipherInputStream(dis, cipher);
-//
-//        byte[] buffer = new byte[20];
-//        int readLength = content.read(buffer);
-//        while (readLength > 0)
-//        {
-//            if (readLength == buffer.length)
-//            {
-//                System.out.println(Hex.encodeHexString(buffer));
-//            }
-//            else
-//            {
-//                System.out.println(Hex.encodeHexString(Arrays.copyOf(buffer, readLength)));
-//            }
-//            readLength = content.read(buffer);
-//        }
 
         dis.close();
     }
@@ -176,16 +120,91 @@ public class ExampleUnitTest {
     {
         SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
         KeySpec keySpec = new PBEKeySpec(password, salt, iterationCount, 256);
-        Key key = keyFactory.generateSecret(keySpec);
-        key = new SecretKeySpec(key.getEncoded(), "AES");
-        return key;
+        return keyFactory.generateSecret(keySpec);
     }
 
     private Cipher getCipher(Key key, byte[] iv) throws Exception
     {
         Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
+        key = new SecretKeySpec(key.getEncoded(), "AES");
         cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(iv));
         return cipher;
     }
 
+    private void print(String title, char[] value) {
+        System.out.print(title);
+        System.out.print(":");
+        for (char c: value) {
+            System.out.format(" %02x", (int)c);
+        }
+        System.out.println();
+    }
+
+    private byte[] GenerateKey(
+            final byte[] password,
+            final byte[] salt,
+            int iterationCount)
+    {
+        int keyLength = 32;
+
+        byte[] passwordInternal = password.clone();
+        byte[] saltInternal = salt.clone();
+
+        SecretKeySpec keySpec = new SecretKeySpec(passwordInternal, "HmacSHA1");
+        Mac prf = null;
+        try {
+            prf = Mac.getInstance("HmacSHA1");
+            prf.init(keySpec);
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+
+        int hLen = prf.getMacLength(); // 20 for SHA1
+        int l = Math.max(keyLength, hLen); // 1 for 128bit (16-byte) keys
+        byte T[] = new byte[l * hLen];
+        int ti_offset = 0;
+        for (int i = 1; i <= l; i++) {
+            F(T, ti_offset, prf, saltInternal, iterationCount, i);
+            ti_offset += hLen;
+        }
+
+        return Arrays.copyOf(T, keyLength);
+    }
+
+    private void F(
+            byte[] dest,
+            int offset,
+            Mac prf,
+            byte[] salt,
+            int c,
+            int blockIndex)
+    {
+        final int hLen = prf.getMacLength();
+        byte U_r[] = new byte[hLen];
+        // U0 = S || INT (i);
+        byte U_i[] = new byte[salt.length + 4];
+        System.arraycopy(salt, 0, U_i, 0, salt.length);
+        INT(U_i, salt.length, blockIndex);
+        for (int i = 0; i < c; i++) {
+            U_i = prf.doFinal(U_i);
+            XOR(U_r, U_i);
+        }
+
+        System.arraycopy(U_r, 0, dest, offset, hLen);
+    }
+
+    private void XOR(byte[] dest, byte[] src) {
+        for (int i = 0; i < dest.length; i++) {
+            dest[i] ^= src[i];
+        }
+    }
+
+    private void INT(byte[] dest, int offset, int i) {
+        dest[offset + 0] = (byte) (i >> 24);
+        dest[offset + 1] = (byte) (i >> 16);
+        dest[offset + 2] = (byte) (i >> 8);
+        dest[offset + 3] = (byte) (i);
+    }
 }
