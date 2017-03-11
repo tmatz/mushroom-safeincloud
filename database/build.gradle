@@ -30,5 +30,4 @@ dependencies {
     compile 'commons-codec:commons-codec:1.10'
     compile 'commons-lang:commons-lang:2.6'
     testCompile 'junit:junit:4.12'
-    testCompile "org.robolectric:robolectric:3.3"
 }

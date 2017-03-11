@@ -5,8 +5,6 @@ import android.util.Xml;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
 import org.xmlpull.v1.XmlPullParser;
 
 import java.io.BufferedInputStream;
@@ -35,8 +33,6 @@ import javax.crypto.spec.SecretKeySpec;
  *
  * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
  */
-@RunWith(RobolectricTestRunner.class)
-@Config(constants = BuildConfig.class)
 public class ExampleUnitTest {
     @Test
     public void openDatabase() throws Exception {
