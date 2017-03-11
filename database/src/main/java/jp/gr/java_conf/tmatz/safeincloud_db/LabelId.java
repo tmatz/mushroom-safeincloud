@@ -4,21 +4,23 @@ import org.apache.commons.lang.StringUtils;
 
 import java.io.PrintStream;
 
-/**
- * Created by matsuda on 17/03/05.
- */
-
 public class LabelId {
 
-    private final String mId;
+    private String mId;
 
-    public LabelId(String id)
-    {
+    public LabelId() {
+    }
+
+    public LabelId(String id) {
         mId = StringUtils.trimToEmpty(id);
     }
 
     public String getId() {
         return mId;
+    }
+
+    public void setId(String id) {
+        mId = id;
     }
 
     public void dump(PrintStream out, int depth) {

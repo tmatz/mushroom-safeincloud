@@ -6,10 +6,6 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by matsuda on 17/03/05.
- */
-
 public class Card {
 
     enum Symbol {
@@ -35,7 +31,7 @@ public class Card {
         t,
     }
 
-    private final String mTitle; // title
+    private String mTitle; // title
     private int mId; // id
     private String mSymbol; // symbol
     private String mColor; // color
@@ -48,10 +44,12 @@ public class Card {
     private final List<Note> mNotes = new ArrayList<>();
     private final List<LabelId> mLabelIds = new ArrayList<>();
 
+    public Card() {
+    }
+
     public Card(String title) {
         mTitle = StringUtils.trimToEmpty(title);
     }
-
 
     public void addField(Field field) {
         mFields.add(field);
@@ -65,24 +63,24 @@ public class Card {
         mLabelIds.add(labelId);
     }
 
-    public List<Field> getFields()
-    {
+    public List<Field> getFields() {
         return mFields;
     }
 
-    public List<Note> getNotes()
-    {
+    public List<Note> getNotes() {
         return mNotes;
     }
 
-    public List<LabelId> getLabelIds()
-    {
+    public List<LabelId> getLabelIds() {
         return mLabelIds;
     }
 
-    public String getTitle()
-    {
+    public String getTitle() {
         return mTitle;
+    }
+
+    public void setTitle(String title) {
+        mTitle = title;
     }
 
     public void dump(PrintStream out, int depth) {

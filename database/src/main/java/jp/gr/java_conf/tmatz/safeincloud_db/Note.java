@@ -4,22 +4,23 @@ import org.apache.commons.lang.StringUtils;
 
 import java.io.PrintStream;
 
-/**
- * Created by matsuda on 17/03/05.
- */
-
 public class Note {
 
-    private final String mText;
+    private String mText;
 
-    public Note(String text)
-    {
+    public Note() {
+    }
+
+    public Note(String text) {
         mText = StringUtils.trimToEmpty(text);
     }
 
-    public String getText()
-    {
+    public String getText() {
         return mText;
+    }
+
+    public void setText(String value) {
+        mText = value;
     }
 
     public void dump(PrintStream out, int depth) {

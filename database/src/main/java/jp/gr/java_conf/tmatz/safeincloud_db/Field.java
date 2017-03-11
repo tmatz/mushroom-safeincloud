@@ -4,16 +4,13 @@ import org.apache.commons.lang.StringUtils;
 
 import java.io.PrintStream;
 
-/**
- * Created by matsuda on 17/03/05.
- */
-
 public class Field {
-    private final String mTitle;
-    private final String mTitleLower;
-    private final String mValue;
-    private final String mValueLower;
-    private final String mType;
+
+    private String mTitle;
+    private String mTitleLower;
+    private String mValue;
+    private String mValueLower;
+    private String mType;
 
     enum Type {
         __unknown__,
@@ -30,38 +27,48 @@ public class Field {
         website,
     }
 
-    public Field(String title, String value, String type)
-    {
-        mTitle = StringUtils.trimToEmpty(title);
-        mTitleLower = mTitle.toLowerCase();
-        mValue = StringUtils.trimToEmpty(value);
-        mValueLower = mValue.toLowerCase();
-        mType = StringUtils.trimToEmpty(type);
+    public Field() {
     }
 
-    public String getTitle()
+    public Field(String title, String value, String type)
     {
+        setTitle(title);
+        setValue(value);
+        setType(type);
+    }
+
+    public String getTitle() {
         return mTitle;
     }
 
-    public String getTitleLower()
-    {
+    public void setTitle(String title) {
+        mTitle = StringUtils.trimToEmpty(title);
+        mTitleLower = mTitle.toLowerCase();
+    }
+
+    public String getTitleLower() {
         return mTitleLower;
     }
 
-    public String getValue()
-    {
+    public String getValue() {
         return mValue;
     }
 
-    public String getValueLower()
-    {
+    public void setValue(String value) {
+        mValue = StringUtils.trimToEmpty(value);
+        mValueLower = mValue.toLowerCase();
+    }
+
+    public String getValueLower() {
         return mValueLower;
     }
 
-    public String getType()
-    {
+    public String getType() {
         return mType;
+    }
+
+    public void setType(String type) {
+        mType = StringUtils.trimToEmpty(type);
     }
 
     public void dump(PrintStream out, int depth) {
