@@ -1,26 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<string name="hello">Pocket Mushroom</string>
-	<string name="app_name">Pocket Mushroom</string>
-	<string name="cant_open_pocket">Can not open Pocket.</string>
-	<string name="exception_file_not_found">Pocket file not found.</string>
-	<string name="exception_file_can_not_read">Pocket file can not read.</string>
-	<string name="exception_storage_not_readable">Storage not readable</string>
-	<string name="exception_wrong_password">Wrong password</string>
-	<string name="exception_encryption_failed">Encryption failed</string>
-	<string name="exception_decryption_failed">Decryption failed</string>
-	<string name="hint_package_name">(package name)</string>
-	<string name="hint_password">(password)</string>
-	<string name="hint_title">(title)</string>
-	<string name="hint_value">(value)</string>
-	<string name="hint_search">search string</string>
-	<string name="package_name">Login request from:</string>
-	<string name="password">Password:</string>
-	<string name="notes">Notes</string>
-	<string name="action_search">Search</string>
-	<string name="action_settings">Settings</string>
-	<string name="all_entries">All Entries</string>
-	<string name="no_entries">No Entries</string>
-	<string name="no_fields">No Fields</string>
-	<string name="login">Login</string>
+    <string name="hello">SafeInCloud Mushroom</string>
+    <string name="app_name">SafeInCloud Mushroom</string>
+    <string name="cant_open_pocket">Can not open Pocket.</string>
+    <string name="exception_file_not_found">Pocket file not found.</string>
+    <string name="exception_file_can_not_read">Pocket file can not read.</string>
+    <string name="exception_storage_not_readable">Storage not readable</string>
+    <string name="exception_wrong_password">Wrong password</string>
+    <string name="exception_encryption_failed">Encryption failed</string>
+    <string name="exception_decryption_failed">Decryption failed</string>
+    <string name="hint_package_name">(package name)</string>
+    <string name="hint_password">(password)</string>
+    <string name="hint_title">(title)</string>
+    <string name="hint_value">(value)</string>
+    <string name="hint_search">search string</string>
+    <string name="package_name">Login request from:</string>
+    <string name="password">Password:</string>
+    <string name="notes">Notes</string>
+    <string name="action_search">Search</string>
+    <string name="action_settings">Settings</string>
+    <string name="all_entries">All Entries</string>
+    <string name="no_entries">No Entries</string>
+    <string name="no_fields">No Fields</string>
+    <string name="login">Login</string>
+    <string name="title_activity_main">MainActivity</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
 </resources>
