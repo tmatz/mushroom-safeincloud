@@ -16,159 +16,130 @@ import android.widget.ListView;
 
 import java.util.List;
 
-public class EntriesFragment extends CustomListFragment
-	implements
-		LoaderCallbacks<List<EntryInfo>>
-{
-	public static final String TAG = EntriesFragment.class.getSimpleName();
-	public static final String ARG_PACKAGE_NAME = "package_name";
-	public static final String ARG_GROUP_ID = "group_id";
+public class EntriesFragment extends CustomListFragment implements LoaderCallbacks<List<EntryInfo>> {
+    public static final String TAG = EntriesFragment.class.getSimpleName();
+    public static final String ARG_PACKAGE_NAME = "package_name";
+    public static final String ARG_GROUP_ID = "group_id";
 
-	private ArrayAdapter<EntryInfo> mAdapter;
+    private ArrayAdapter<EntryInfo> mAdapter;
 
-	public static Bundle newArgument(
-		String packageName,
-		String groupId,
-		Bundle extra)
-	{
-		if (extra == null)
-		{
-			extra = new Bundle();
-		}
+    public static Bundle newArgument(String packageName, String groupId, Bundle extra) {
+        if (extra == null) {
+            extra = new Bundle();
+        }
 
-		extra.putString(ARG_PACKAGE_NAME, packageName);
-		extra.putString(ARG_GROUP_ID, groupId);
+        extra.putString(ARG_PACKAGE_NAME, packageName);
+        extra.putString(ARG_GROUP_ID, groupId);
 
-		return extra;
-	}
+        return extra;
+    }
 
-	@Override
-	public void onCreate(Bundle savedInstanceState)
-	{
-		Logger.i(TAG, "onCreate");
-		super.onCreate(savedInstanceState);
-		setHasOptionsMenu(true);
-	}
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        Logger.i(TAG, "onCreate");
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
 
-	@Override
-	public void onViewCreated(View view, Bundle savedInstanceState)
-	{
-		Logger.i(TAG, "onViewCreated");
-		super.onViewCreated(view, savedInstanceState);
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        Logger.i(TAG, "onViewCreated");
+        super.onViewCreated(view, savedInstanceState);
 
-		mAdapter = new ArrayAdapter<EntryInfo>(
-			getActivity(),
-			android.R.layout.simple_list_item_1);
-		mAdapter.setNotifyOnChange(true);
+        mAdapter = new ArrayAdapter<>(
+                getActivity(),
+                android.R.layout.simple_list_item_1);
+        mAdapter.setNotifyOnChange(true);
 
-		setEmptyText(getResources().getString(R.string.no_entries));
+        setEmptyText(getResources().getString(R.string.no_entries));
 
-		LoaderManager manager = getLoaderManager();
-		manager.initLoader(0, getArguments(), this);
-	}
+        LoaderManager manager = getLoaderManager();
+        manager.initLoader(0, getArguments(), this);
+    }
 
-	@Override
-	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater)
-	{
-		Logger.i(TAG, "onCreateOptionsMenu");
-		inflater.inflate(R.menu.menu_entries_fragment, menu);
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        Logger.i(TAG, "onCreateOptionsMenu");
+        inflater.inflate(R.menu.menu_entries_fragment, menu);
 
-		setupSearchView(menu);
+        setupSearchView(menu);
 
-		MenuItem menuItem = menu.findItem(R.id.action_search);
-		final SearchView searchView = (SearchView) MenuItemCompat
-			.getActionView(menuItem);
+        MenuItem menuItem = menu.findItem(R.id.action_search);
+        final SearchView searchView = (SearchView) MenuItemCompat
+                .getActionView(menuItem);
 
-		searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener()
-		{
-			@Override
-			public boolean onQueryTextSubmit(String query)
-			{
-				mAdapter.getFilter().filter(query);
-				return true;
-			}
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                mAdapter.getFilter().filter(query);
+                return true;
+            }
 
-			@Override
-			public boolean onQueryTextChange(String newText)
-			{
-				mAdapter.getFilter().filter(newText);
-				return true;
-			}
-		});
-	}
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                mAdapter.getFilter().filter(newText);
+                return true;
+            }
+        });
+    }
 
-	@Override
-	public void onListItemClick(ListView l, View v, int position, long id)
-	{
-		Logger.i(TAG, "onListItemClick");
-		super.onListItemClick(l, v, position, id);
+    @Override
+    public void onListItemClick(ListView l, View v, int position, long id) {
+        Logger.i(TAG, "onListItemClick");
+        super.onListItemClick(l, v, position, id);
 
-		if (getActivity() instanceof OnListItemSelectedListener)
-		{
-			EntryInfo data = mAdapter.getItem(position);
-			((OnListItemSelectedListener) getActivity()).onListItemSelected(
-				this,
-				data);
-		}
-	}
+        if (getActivity() instanceof OnListItemSelectedListener) {
+            EntryInfo data = mAdapter.getItem(position);
+            ((OnListItemSelectedListener) getActivity()).onListItemSelected(
+                    this,
+                    data);
+        }
+    }
 
-	private static class ItemsLoader
-		extends
-			CachedAsyncTaskLoader<List<EntryInfo>>
-	{
-		private Bundle mArgs;
+    @Override
+    public Loader<List<EntryInfo>> onCreateLoader(int id, Bundle args) {
+        Logger.i(TAG, "onCreateLoader");
+        Loader<List<EntryInfo>> loader = new ItemsLoader(getActivity(), args);
+        loader.forceLoad();
+        return loader;
+    }
 
-		public ItemsLoader(Context context, Bundle args)
-		{
-			super(context);
-			mArgs = args;
-		}
+    @Override
+    public void onLoadFinished(Loader<List<EntryInfo>> loader, List<EntryInfo> items) {
+        Logger.i(TAG, "onLoadFinished");
+        if (items != null) {
+            for (EntryInfo i : items) {
+                mAdapter.add(i);
+            }
+        }
+        setListAdapter(mAdapter);
+    }
 
-		@Override
-		public List<EntryInfo> loadInBackground()
-		{
-			String packageName = mArgs.getString(ARG_PACKAGE_NAME);
-			PocketLock pocketLock = PocketLock.getPocketLock(packageName);
+    @Override
+    public void onLoaderReset(Loader<List<EntryInfo>> loader) {
+        Logger.i(TAG, "onLoadFinished");
+        setListAdapter(mAdapter);
+    }
 
-			if (pocketLock == null)
-			{
-				return null;
-			}
+    private static class ItemsLoader extends CachedAsyncTaskLoader<List<EntryInfo>> {
+        private Bundle mArgs;
 
-			String groupId = mArgs.getString(ARG_GROUP_ID);
-			return PocketDatabase.readEntries(getContext(), pocketLock, groupId);
-		}
-	}
+        public ItemsLoader(Context context, Bundle args) {
+            super(context);
+            mArgs = args;
+        }
 
-	@Override
-	public Loader<List<EntryInfo>> onCreateLoader(int id, Bundle args)
-	{
-		Logger.i(TAG, "onCreateLoader");
-		Loader<List<EntryInfo>> loader = new ItemsLoader(getActivity(), args);
-		loader.forceLoad();
-		return loader;
-	}
+        @Override
+        public List<EntryInfo> loadInBackground() {
+            String packageName = mArgs.getString(ARG_PACKAGE_NAME);
+            PocketLock pocketLock = PocketLock.getPocketLock(packageName);
 
-	@Override
-	public void onLoadFinished(
-		Loader<List<EntryInfo>> loader,
-		List<EntryInfo> items)
-	{
-		Logger.i(TAG, "onLoadFinished");
-		if (items != null)
-		{
-			for (EntryInfo i : items)
-			{
-				mAdapter.add(i);
-			}
-		}
-		setListAdapter(mAdapter);
-	}
+            if (pocketLock == null) {
+                return null;
+            }
 
-	@Override
-	public void onLoaderReset(Loader<List<EntryInfo>> loader)
-	{
-		Logger.i(TAG, "onLoadFinished");
-		setListAdapter(mAdapter);
-	}
+            String groupId = mArgs.getString(ARG_GROUP_ID);
+            return PocketDatabase.readEntries(getContext(), pocketLock, groupId);
+        }
+    }
 }
