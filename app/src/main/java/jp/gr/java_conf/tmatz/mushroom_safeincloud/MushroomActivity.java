@@ -170,7 +170,7 @@ public class MushroomActivity extends ActionBarActivity
         Log.i(TAG, "onResume");
 
         super.onResume();
-        PocketLock.resetTimer();
+        LockTimer.resetTimer();
     }
 
     @Override
@@ -179,7 +179,7 @@ public class MushroomActivity extends ActionBarActivity
 
         super.onPause();
         saveInstanceStateIntoPref();
-        PocketLock.startTimer();
+        LockTimer.startTimer();
     }
 
     private void showLoginDialog() {

@@ -19,12 +19,8 @@ class PocketLock {
     private static final String CIPHER_ALGORITHM = "AES/CBC/PKCS5Padding";
     private static final String SECRET_KEY_ALGORITHM = "AES";
     private static final String HASHFILE_NAME = "hash.txt";
-    private static final int EXPIRE_DELAY = 300 * 1000;
-
-    private static final boolean sExpireTimeEnable = false;
 
     private static PocketLock sPocketLock;
-    private static long sExpireTime;
 
     private String mPasswordHash;
     private String mPasswordSalt;
@@ -32,23 +28,13 @@ class PocketLock {
     private String mPackageName;
     private SecretKey mSecretKey;
 
-    static synchronized void resetTimer() {
-        Log.i(TAG, "resetTimer");
-        sExpireTime = 0;
-    }
-
-    static synchronized void startTimer() {
-        Log.i(TAG, "startTimer");
-        sExpireTime = System.currentTimeMillis() + EXPIRE_DELAY;
-    }
-
     private static void expire() {
         Log.i(TAG, "expire");
         setPocketLock(null);
     }
 
     static synchronized PocketLock getPocketLock(String packageName) {
-        if (sExpireTimeEnable && sExpireTime != 0 && System.currentTimeMillis() > sExpireTime) {
+        if (LockTimer.isExpired()) {
             expire();
             return null;
         }
