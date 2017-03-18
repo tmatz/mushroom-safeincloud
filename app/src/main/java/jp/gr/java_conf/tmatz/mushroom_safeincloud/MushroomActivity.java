@@ -40,8 +40,8 @@ implements OnListItemSelectedListener, LoginFragment.DialogListener
 	private static final String ARG_TAG = "tag";
 	private static final int LOADER_GROUP_LIST = 0;
 
-	private int mGroupId = -1;
-	private int mEntryId = -1;
+	private String mGroupId = "";
+	private String mEntryId = "";
 	private String mCallingPackage;
 	private ArrayList<Bundle> mFragmentArguments = new ArrayList<Bundle>();
 	private ViewPager mPager;
@@ -53,8 +53,8 @@ implements OnListItemSelectedListener, LoginFragment.DialogListener
 		int currentItem = mPager.getCurrentItem();
 		SharedPreferences pref = getPreferences(MODE_PRIVATE);
 		pref.edit()
-			.putInt(STATE_GROUP_ID, mGroupId)
-			.putInt(STATE_ENTRY_ID, (currentItem >= 1) ? mEntryId : -1)
+			.putString(STATE_GROUP_ID, mGroupId)
+			.putString(STATE_ENTRY_ID, (currentItem >= 1) ? mEntryId : "")
 			.commit();
 	}
 
@@ -64,8 +64,8 @@ implements OnListItemSelectedListener, LoginFragment.DialogListener
 		Logger.i(TAG, "onSaveInstanceState", "group", mGroupId, "entry", mEntryId);
 		super.onSaveInstanceState(outState);
 
-		outState.putInt(STATE_GROUP_ID, mGroupId);
-		outState.putInt(STATE_ENTRY_ID, mEntryId);
+		outState.putString(STATE_GROUP_ID, mGroupId);
+		outState.putString(STATE_ENTRY_ID, mEntryId);
 		outState.putParcelableArrayList(STATE_FRAGMENT_ARGUMENTS, mFragmentArguments);
 	}
 
@@ -73,8 +73,8 @@ implements OnListItemSelectedListener, LoginFragment.DialogListener
 	{
 		if (savedInstanceState != null)
 		{
-			mGroupId = savedInstanceState.getInt(STATE_GROUP_ID, -1);
-			mEntryId = savedInstanceState.getInt(STATE_ENTRY_ID, -1);
+			mGroupId = savedInstanceState.getString(STATE_GROUP_ID, "");
+			mEntryId = savedInstanceState.getString(STATE_ENTRY_ID, "");
 			mFragmentArguments = savedInstanceState.getParcelableArrayList(STATE_FRAGMENT_ARGUMENTS);
 			if (mPagerAdapter != null)
 			{
@@ -84,11 +84,11 @@ implements OnListItemSelectedListener, LoginFragment.DialogListener
 		else
 		{
 			SharedPreferences pref = getPreferences(MODE_PRIVATE);
-			mGroupId = pref.getInt(STATE_GROUP_ID, -1);
-			mEntryId = pref.getInt(STATE_ENTRY_ID, -1);
+			mGroupId = pref.getString(STATE_GROUP_ID, "");
+			mEntryId = pref.getString(STATE_ENTRY_ID, "");
 
 			setPage(0, EntriesFragment.TAG, EntriesFragment.newArgument(mCallingPackage, mGroupId, null), false);
-			if (mEntryId != -1)
+			if (!mEntryId.isEmpty())
 			{
 				setPage(1, FieldsFragment.TAG, FieldsFragment.newArgument(mCallingPackage, mEntryId, null), false);
 			}
@@ -147,9 +147,9 @@ implements OnListItemSelectedListener, LoginFragment.DialogListener
 			@Override
 			public boolean onNavigationItemSelected(int itemPosition, long itemId)
 			{
-				if (mGroupId != mGroupAdapter.getItem(itemPosition).id)
+				if (!mGroupId.equals(mGroupAdapter.getItem(itemPosition).getId()))
 				{
-					mGroupId = mGroupAdapter.getItem(itemPosition).id;
+					mGroupId = mGroupAdapter.getItem(itemPosition).getId();
 					setPage(0, EntriesFragment.TAG, EntriesFragment.newArgument(mCallingPackage, mGroupId, null), false);
 				}
 				return true;
@@ -220,15 +220,15 @@ implements OnListItemSelectedListener, LoginFragment.DialogListener
 		if (EntriesFragment.TAG.equals(tag))
 		{
 			EntryInfo item = (EntryInfo)data;
-			Logger.i(TAG, "onListItemSelected", tag, item.id);
-			mEntryId = item.id;
+			Logger.i(TAG, "onListItemSelected", tag, item.getId());
+			mEntryId = item.getId();
 			setPage(1, FieldsFragment.TAG, FieldsFragment.newArgument(mCallingPackage, mEntryId, null), false);
 		}
 		else if (FieldsFragment.TAG.equals(tag))
 		{
 			FieldInfo item = (FieldInfo)data;
-			Logger.i(TAG, "onListItemSelected", tag, item.id);
-			replace(item.value);
+			Logger.i(TAG, "onListItemSelected", tag, item.getId());
+			replace(item.getValue());
 		}
 	}
 
@@ -433,7 +433,7 @@ implements OnListItemSelectedListener, LoginFragment.DialogListener
 			int count = mGroupAdapter.getCount();
 			for (int i = 0; i < count; ++i)
 			{
-				if (mGroupAdapter.getItem(i).id == mGroupId)
+				if (mGroupAdapter.getItem(i).getId() == mGroupId)
 				{
 					getSupportActionBar().setSelectedNavigationItem(i);
 				}

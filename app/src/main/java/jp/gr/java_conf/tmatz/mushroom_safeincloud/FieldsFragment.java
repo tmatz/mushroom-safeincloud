@@ -34,7 +34,7 @@ public class FieldsFragment extends CustomListFragment
 
 	public static Bundle newArgument(
 		String packageName,
-		int entryId,
+		String entryId,
 		Bundle extra)
 	{
 		if (extra == null)
@@ -43,7 +43,7 @@ public class FieldsFragment extends CustomListFragment
 		}
 
 		extra.putString(ARG_PACKAGE_NAME, packageName);
-		extra.putInt(ARG_ENTRY_ID, entryId);
+		extra.putString(ARG_ENTRY_ID, entryId);
 
 		return extra;
 	}
@@ -84,9 +84,9 @@ public class FieldsFragment extends CustomListFragment
 				TextView text2 = (TextView) view
 					.findViewById(android.R.id.text2);
 
-				text1.setText(item.title);
-				text2.setText(item.value);
-				if (item.isHidden)
+				text1.setText(item.getTitle());
+				text2.setText(item.getValue());
+				if (item.isHidden())
 				{
 					text2
 						.setTransformationMethod(mPasswordTransformationMethod);
@@ -176,7 +176,7 @@ public class FieldsFragment extends CustomListFragment
 				return null;
 			}
 
-			int entryId = mArgs.getInt(ARG_ENTRY_ID);
+			String entryId = mArgs.getString(ARG_ENTRY_ID);
 
 			return PocketDatabase.readFields(getContext(), pocketLock, entryId);
 		}

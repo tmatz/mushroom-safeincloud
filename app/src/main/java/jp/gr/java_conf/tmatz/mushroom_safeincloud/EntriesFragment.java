@@ -28,7 +28,7 @@ public class EntriesFragment extends CustomListFragment
 
 	public static Bundle newArgument(
 		String packageName,
-		int groupId,
+		String groupId,
 		Bundle extra)
 	{
 		if (extra == null)
@@ -37,7 +37,7 @@ public class EntriesFragment extends CustomListFragment
 		}
 
 		extra.putString(ARG_PACKAGE_NAME, packageName);
-		extra.putInt(ARG_GROUP_ID, groupId);
+		extra.putString(ARG_GROUP_ID, groupId);
 
 		return extra;
 	}
@@ -135,7 +135,7 @@ public class EntriesFragment extends CustomListFragment
 				return null;
 			}
 
-			int groupId = mArgs.getInt(ARG_GROUP_ID);
+			String groupId = mArgs.getString(ARG_GROUP_ID);
 			return PocketDatabase.readEntries(getContext(), pocketLock, groupId);
 		}
 	}

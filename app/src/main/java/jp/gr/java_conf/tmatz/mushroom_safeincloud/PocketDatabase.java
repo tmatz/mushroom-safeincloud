@@ -80,17 +80,17 @@ public class PocketDatabase {
         Cursor c = database.rawQuery("select _id, title from groups", null);
         while (c.moveToNext())
         {
-            items.add(new GroupInfo(c.getInt(0), pocketLock.decrypt(c.getString(1))));
+            items.add(new GroupInfo(c.getString(0), pocketLock.decrypt(c.getString(1))));
         }
         c.close();
 
         Collections.sort(items);
 
-        items.add(0, new GroupInfo(-1, context.getString(R.string.all_entries)));
+        items.add(0, new GroupInfo("", context.getString(R.string.all_entries)));
         return items;
     }
 
-    public synchronized static List<EntryInfo> readEntries(Context context, PocketLock pocketLock, int groupId) {
+    public synchronized static List<EntryInfo> readEntries(Context context, PocketLock pocketLock, String groupId) {
         Validate.notNull(context);
         Validate.notNull(pocketLock);
 
@@ -102,15 +102,19 @@ public class PocketDatabase {
         List<EntryInfo> items = new ArrayList<>();
 
         Cursor c;
-        if (groupId < 0) {
-            c = database.rawQuery("select _id, title from entries", null);
+        if (groupId == null) {
+            c = database.rawQuery(
+                    "select _id, title from entries",
+                    null);
         } else {
-            c = database.rawQuery("select _id, title from entries where group_id = ?", new String[]{String.valueOf(groupId)});
+            c = database.rawQuery(
+                    "select _id, title from entries where group_id = ?",
+                    new String[]{ groupId });
         }
 
         if (c.moveToFirst()) {
             do {
-                items.add(new EntryInfo(c.getInt(0), pocketLock.decrypt(c.getString(1))));
+                items.add(new EntryInfo(c.getString(0), pocketLock.decrypt(c.getString(1))));
             } while (c.moveToNext());
         }
 
@@ -121,10 +125,10 @@ public class PocketDatabase {
         return items;
     }
 
-    public synchronized static List<FieldInfo> readFields(Context context, PocketLock pocketLock, int entryId) {
+    public synchronized static List<FieldInfo> readFields(Context context, PocketLock pocketLock, String entryId) {
         Validate.notNull(context);
         Validate.notNull(pocketLock);
-        Validate.isTrue(entryId >= 0);
+        Validate.notNull(entryId);
 
         SQLiteDatabase database = PocketDatabase.openDatabase();
         if (database == null) {
@@ -136,7 +140,7 @@ public class PocketDatabase {
         {
             Cursor c = database.rawQuery(
                     "select _id, title, value, is_hidden from fields where entry_id = ?",
-                    new String[] { String.valueOf(entryId) });
+                    new String[] { entryId });
 
             while (c.moveToNext()) {
                 FieldInfo data = new FieldInfo(
@@ -145,7 +149,7 @@ public class PocketDatabase {
                         pocketLock.decrypt(c.getString(2)),
                         c.getInt(3) != 0);
 
-                if (!TextUtils.isEmpty(data.value)) {
+                if (!TextUtils.isEmpty(data.getValue())) {
                     items.add(data);
                 }
             }
@@ -156,8 +160,8 @@ public class PocketDatabase {
 
         {
             Cursor c = database.rawQuery(
-                    "select _id, notes from entries where _id = " + entryId,
-                    null);
+                    "select _id, notes from entries where _id = ?",
+                    new String[] { entryId });
             if (c.moveToFirst()) {
                 FieldInfo data = new FieldInfo(
                         -1,
@@ -165,7 +169,7 @@ public class PocketDatabase {
                         pocketLock.decrypt(c.getString(1)),
                         false);
 
-                if (!TextUtils.isEmpty(data.value)) {
+                if (!TextUtils.isEmpty(data.getValue())) {
                     items.add(data);
                 }
             }
