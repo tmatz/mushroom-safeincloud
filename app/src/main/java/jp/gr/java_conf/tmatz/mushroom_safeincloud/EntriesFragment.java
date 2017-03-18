@@ -124,7 +124,7 @@ public class EntriesFragment extends CustomListFragment implements LoaderCallbac
     private static class ItemsLoader extends CachedAsyncTaskLoader<List<EntryInfo>> {
         private Bundle mArgs;
 
-        public ItemsLoader(Context context, Bundle args) {
+        ItemsLoader(Context context, Bundle args) {
             super(context);
             mArgs = args;
         }

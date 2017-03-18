@@ -3,10 +3,10 @@ package jp.gr.java_conf.tmatz.mushroom_safeincloud;
 import android.content.Context;
 import android.support.v4.content.AsyncTaskLoader;
 
-public abstract class CachedAsyncTaskLoader<T> extends AsyncTaskLoader<T> {
-    protected T mCachedData;
+abstract class CachedAsyncTaskLoader<T> extends AsyncTaskLoader<T> {
+    private T mCachedData;
 
-    public CachedAsyncTaskLoader(Context context) {
+    CachedAsyncTaskLoader(Context context) {
         super(context);
     }
 

@@ -5,14 +5,17 @@ import android.app.Dialog;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
+import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -26,7 +29,7 @@ public class LoginFragment extends DialogFragment {
 
     private static final Object sMutex = new Object();
 
-    public interface DialogListener {
+     interface DialogListener {
         void onOK(LoginFragment fragment);
 
         void onCancel(LoginFragment fragment);
@@ -36,7 +39,6 @@ public class LoginFragment extends DialogFragment {
 
     private DialogListener mDialogListener;
     private EditText mPasswordText;
-    private ImageButton mClearButton;
 
     public static LoginFragment newInstance(String packageName) {
         LoginFragment f = new LoginFragment();
@@ -65,7 +67,7 @@ public class LoginFragment extends DialogFragment {
     }
 
     @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
+    public @NonNull Dialog onCreateDialog(Bundle savedInstanceState) {
         Logger.i(TAG, "onCreateDialog");
         Dialog dialog = super.onCreateDialog(savedInstanceState);
         dialog.setTitle(R.string.login);
@@ -80,7 +82,7 @@ public class LoginFragment extends DialogFragment {
         final ImageView appIconView = (ImageView) content.findViewById(R.id.applicatio_icon);
         final TextView appLabelView = (TextView) content.findViewById(R.id.application_label);
         mPasswordText = (EditText) content.findViewById(R.id.password_text);
-        mClearButton = (ImageButton) content.findViewById(R.id.search_cancel);
+        final ImageButton clearButton = (ImageButton) content.findViewById(R.id.search_cancel);
         final Button okButton = (Button) content.findViewById(R.id.ok_btn);
         final Button cancelButton = (Button) content.findViewById(R.id.cancel_btn);
 
@@ -90,6 +92,7 @@ public class LoginFragment extends DialogFragment {
             appIconView.setImageDrawable(pm.getApplicationIcon(appInfo));
             appLabelView.setText(pm.getApplicationLabel(appInfo));
         } catch (PackageManager.NameNotFoundException e) {
+            Log.d(TAG, "onCreateView", e);
         }
 
         mPasswordText.setOnKeyListener(new OnKeyListener() {
@@ -105,7 +108,7 @@ public class LoginFragment extends DialogFragment {
             }
         });
 
-        mClearButton.setOnClickListener(new OnClickListener() {
+        clearButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View p1)
             {
@@ -133,7 +136,10 @@ public class LoginFragment extends DialogFragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        getDialog().getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        Window window = getDialog().getWindow();
+        if (window != null) {
+            window.setLayout(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        }
     }
 
     private void ok() {

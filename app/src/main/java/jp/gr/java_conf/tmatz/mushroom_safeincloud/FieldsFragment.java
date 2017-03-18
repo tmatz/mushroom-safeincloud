@@ -2,6 +2,8 @@ package jp.gr.java_conf.tmatz.mushroom_safeincloud;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
@@ -57,24 +59,25 @@ public class FieldsFragment extends CustomListFragment implements LoaderCallback
             private final TransformationMethod mNormalTransformationMethod = new HideReturnsTransformationMethod();
 
             @Override
-            public View getView(int position, View view, ViewGroup parent) {
+            public @NonNull View getView(int position, @Nullable View view, @NonNull ViewGroup parent) {
                 if (view == null) {
                     LayoutInflater inflater = (LayoutInflater) getContext()
                             .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                    view = inflater.inflate(R.layout.field_list_item, null);
+                    view = inflater.inflate(R.layout.field_list_item, parent);
                 }
 
                 FieldInfo item = getItem(position);
+                if (item != null) {
+                    TextView text1 = (TextView) view.findViewById(android.R.id.text1);
+                    TextView text2 = (TextView) view.findViewById(android.R.id.text2);
 
-                TextView text1 = (TextView)view.findViewById(android.R.id.text1);
-                TextView text2 = (TextView)view.findViewById(android.R.id.text2);
-
-                text1.setText(item.getTitle());
-                text2.setText(item.getValue());
-                if (item.isHidden()) {
-                    text2.setTransformationMethod(mPasswordTransformationMethod);
-                } else {
-                    text2.setTransformationMethod(mNormalTransformationMethod);
+                    text1.setText(item.getTitle());
+                    text2.setText(item.getValue());
+                    if (item.isHidden()) {
+                        text2.setTransformationMethod(mPasswordTransformationMethod);
+                    } else {
+                        text2.setTransformationMethod(mNormalTransformationMethod);
+                    }
                 }
 
                 return view;
@@ -129,7 +132,7 @@ public class FieldsFragment extends CustomListFragment implements LoaderCallback
     private static class ItemsLoader extends CachedAsyncTaskLoader<List<FieldInfo>> {
         private Bundle mArgs;
 
-        public ItemsLoader(Context context, Bundle args) {
+        ItemsLoader(Context context, Bundle args) {
             super(context);
             mArgs = args;
         }

@@ -1,19 +1,19 @@
 package jp.gr.java_conf.tmatz.mushroom_safeincloud;
 
-public class EntryInfo implements Comparable<EntryInfo> {
+class EntryInfo implements Comparable<EntryInfo> {
     private String mId;
     private String mTitle;
 
-    public EntryInfo(String id, String title) {
+    EntryInfo(String id, String title) {
         mId = id;
         mTitle = title;
     }
 
-    public String getId() {
+    String getId() {
         return mId;
     }
 
-    public String getTitle() {
+    String getTitle() {
         return mTitle;
     }
 

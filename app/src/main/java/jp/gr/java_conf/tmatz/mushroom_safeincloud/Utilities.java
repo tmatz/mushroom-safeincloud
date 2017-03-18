@@ -8,8 +8,8 @@ import android.util.Base64;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-public class Utilities {
-    public static void setDigest(Bundle bundle, String tag) {
+class Utilities {
+    static void setDigest(Bundle bundle, String tag) {
         if (bundle.containsKey(tag)) {
             bundle.remove(tag);
         }
@@ -28,12 +28,9 @@ public class Utilities {
         }
     }
 
-    public static boolean isExternalStorageReadable() {
+    static boolean isExternalStorageReadable() {
         String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state) ||
-                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
-            return true;
-        }
-        return false;
+        return Environment.MEDIA_MOUNTED.equals(state) ||
+                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state);
     }
 }

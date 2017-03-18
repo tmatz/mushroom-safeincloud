@@ -41,7 +41,7 @@ public class MushroomActivity extends ActionBarActivity
     private String mGroupId = "";
     private String mEntryId = "";
     private String mCallingPackage;
-    private ArrayList<Bundle> mFragmentArguments = new ArrayList<Bundle>();
+    private ArrayList<Bundle> mFragmentArguments = new ArrayList<>();
     private ViewPager mPager;
     private PagerAdapter mPagerAdapter;
     private ArrayAdapter<GroupInfo> mGroupAdapter;
@@ -117,7 +117,7 @@ public class MushroomActivity extends ActionBarActivity
         ActionBar actionBar = getSupportActionBar();
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
 
-        mGroupAdapter = new ArrayAdapter<GroupInfo>(this, R.layout.support_simple_spinner_dropdown_item);
+        mGroupAdapter = new ArrayAdapter<>(this, R.layout.support_simple_spinner_dropdown_item);
         mGroupAdapter.setNotifyOnChange(true);
 
         setContentView(R.layout.mushroom_activity);
@@ -132,9 +132,12 @@ public class MushroomActivity extends ActionBarActivity
                     @Override
                     public boolean onNavigationItemSelected(int itemPosition, long itemId)
                     {
-                        if (!mGroupId.equals(mGroupAdapter.getItem(itemPosition).getId())) {
-                            mGroupId = mGroupAdapter.getItem(itemPosition).getId();
-                            setPage(0, EntriesFragment.TAG, EntriesFragment.newArgument(mCallingPackage, mGroupId, null), false);
+                        GroupInfo groupInfo = mGroupAdapter.getItem(itemPosition);
+                        if (groupInfo != null) {
+                            if (!mGroupId.equals(groupInfo.getId())) {
+                                mGroupId = groupInfo.getId();
+                                setPage(0, EntriesFragment.TAG, EntriesFragment.newArgument(mCallingPackage, mGroupId, null), false);
+                            }
                         }
                         return true;
                     }
@@ -291,7 +294,7 @@ public class MushroomActivity extends ActionBarActivity
     }
 
     private class PagerAdapter extends FragmentStatePagerAdapter {
-        public PagerAdapter(FragmentManager fm) {
+        PagerAdapter(FragmentManager fm) {
             super(fm);
         }
 
@@ -307,7 +310,7 @@ public class MushroomActivity extends ActionBarActivity
             } else {
                 Logger.i(TAG, "PagerAdapter.getItem");
 
-                Fragment f = null;
+                Fragment f;
                 Bundle arg = mFragmentArguments.get(position);
                 String tag = arg.getString(ARG_TAG);
 
@@ -331,7 +334,7 @@ public class MushroomActivity extends ActionBarActivity
             int position = arg1.getInt(ARG_POSITION);
             Bundle arg2 = mFragmentArguments.get(position);
             String digest = arg1.getString(ARG_DIGEST);
-            if (digest.equals(arg2.getString(ARG_DIGEST))) {
+            if (digest != null && digest.equals(arg2.getString(ARG_DIGEST))) {
                 return POSITION_UNCHANGED;
             } else {
                 return POSITION_NONE;
@@ -378,7 +381,7 @@ public class MushroomActivity extends ActionBarActivity
     private static class GroupInfoLoader extends CachedAsyncTaskLoader<List<GroupInfo>> {
         private String mPackageName;
 
-        public GroupInfoLoader(Context context, String packageName) {
+        GroupInfoLoader(Context context, String packageName) {
             super(context);
             mPackageName = packageName;
         }

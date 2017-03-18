@@ -7,7 +7,7 @@ import java.security.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
 
-public class PocketLock {
+class PocketLock {
     private static final String TAG = "PocketLock";
     private static final String PROVIDER = "BC";
     private static final int SALT_LENGTH = 20;
@@ -21,26 +21,23 @@ public class PocketLock {
     private static final String HASHFILE_NAME = "hash.txt";
     private static final int EXPIRE_DELAY = 300 * 1000;
 
+    private static final boolean sExpireTimeEnable = false;
+
     private static PocketLock sPocketLock;
-    private static boolean sExpireTimeEnable = false;
     private static long sExpireTime;
 
     private String mPasswordHash;
-    @SuppressWarnings("unused")
-    private String mVersion;
-    @SuppressWarnings("unused")
-    private String mEncryptionMethod;
     private String mPasswordSalt;
     private String mEncryptionSalt;
     private String mPackageName;
     private SecretKey mSecretKey;
 
-    public static synchronized void resetTimer() {
+    static synchronized void resetTimer() {
         Log.i(TAG, "resetTimer");
         sExpireTime = 0;
     }
 
-    public static synchronized void startTimer() {
+    static synchronized void startTimer() {
         Log.i(TAG, "startTimer");
         sExpireTime = System.currentTimeMillis() + EXPIRE_DELAY;
     }
@@ -50,7 +47,7 @@ public class PocketLock {
         setPocketLock(null);
     }
 
-    public static synchronized PocketLock getPocketLock(String packageName) {
+    static synchronized PocketLock getPocketLock(String packageName) {
         if (sExpireTimeEnable && sExpireTime != 0 && System.currentTimeMillis() > sExpireTime) {
             expire();
             return null;
@@ -69,11 +66,11 @@ public class PocketLock {
         return null;
     }
 
-    public static synchronized void setPocketLock(PocketLock lock) {
+    static synchronized void setPocketLock(PocketLock lock) {
         sPocketLock = lock;
     }
 
-    public PocketLock(String packageName) throws CryptoException {
+    PocketLock(String packageName) throws CryptoException {
         if (!Utilities.isExternalStorageReadable()) {
             throw new CryptoException(R.string.exception_storage_not_readable);
         }
@@ -84,33 +81,28 @@ public class PocketLock {
             throw new CryptoException(R.string.exception_file_not_found);
         }
 
-        try {
-            FileReader fr = new FileReader(hashFile);
-            BufferedReader br = new BufferedReader(fr);
-            try {
-                mPasswordHash = br.readLine();
-                mVersion = br.readLine();
-                mEncryptionMethod = br.readLine();
-                mPasswordSalt = br.readLine();
-                mEncryptionSalt = br.readLine();
-                mPackageName = packageName;
-            } finally {
-                br.close();
-            }
+        try (BufferedReader br = new BufferedReader(new FileReader(hashFile))) {
+            mPasswordHash = br.readLine();
+            br.readLine(); // version
+            br.readLine(); // encryptionMethod
+            mPasswordSalt = br.readLine();
+            mEncryptionSalt = br.readLine();
+            mPackageName = packageName;
         } catch (Exception e) {
             throw new CryptoException(R.string.exception_file_can_not_read);
         }
     }
 
-    public String getPackageName() {
+    @SuppressWarnings("unused")
+    String getPackageName() {
         return mPackageName;
     }
 
-    public void unlock(String password) throws CryptoException {
+    void unlock(String password) throws CryptoException {
         mSecretKey = getDatabaseSecretKey(password);
     }
 
-    public String decrypt(String encrypted) throws CryptoException {
+    String decrypt(String encrypted) throws CryptoException {
         try {
             return decrypt(mSecretKey, encrypted);
         } catch (Exception e) {
@@ -119,7 +111,7 @@ public class PocketLock {
     }
 
     private SecretKey getDatabaseSecretKey(String password) throws CryptoException {
-        String genPasswordHash = null;
+        String genPasswordHash;
         try {
             genPasswordHash = getHash(password, mPasswordSalt);
         } catch (Exception e) {
@@ -137,50 +129,49 @@ public class PocketLock {
         }
     }
 
-    public static String encrypt(SecretKey secret, String cleartext) throws Exception {
+    @SuppressWarnings("unused")
+    static String encrypt(SecretKey secret, String cleartext) throws Exception {
         byte[] iv = generateIv();
         String ivHex = HexEncoder.toHex(iv);
-        IvParameterSpec ivspec = new IvParameterSpec(iv);
+        IvParameterSpec ivSpec = new IvParameterSpec(iv);
         Cipher encryptionCipher = Cipher.getInstance(CIPHER_ALGORITHM, PROVIDER);
-        encryptionCipher.init(Cipher.ENCRYPT_MODE, secret, ivspec);
+        encryptionCipher.init(Cipher.ENCRYPT_MODE, secret, ivSpec);
         byte[] encryptedText = encryptionCipher.doFinal(cleartext.getBytes("UTF-8"));
         String encryptedHex = HexEncoder.toHex(encryptedText);
         return ivHex + encryptedHex;
 
     }
 
-    public static String decrypt(SecretKey secret, String encrypted) throws Exception {
+    private static String decrypt(SecretKey secret, String encrypted) throws Exception {
         Cipher decryptionCipher = Cipher.getInstance(CIPHER_ALGORITHM, PROVIDER);
         String ivHex = encrypted.substring(0, IV_LENGTH * 2);
         String encryptedHex = encrypted.substring(IV_LENGTH * 2);
-        IvParameterSpec ivspec = new IvParameterSpec(HexEncoder.toByte(ivHex));
-        decryptionCipher.init(Cipher.DECRYPT_MODE, secret, ivspec);
+        IvParameterSpec ivSpec = new IvParameterSpec(HexEncoder.toByte(ivHex));
+        decryptionCipher.init(Cipher.DECRYPT_MODE, secret, ivSpec);
         byte[] decryptedText = decryptionCipher.doFinal(HexEncoder.toByte(encryptedHex));
-        String decrypted = new String(decryptedText, "UTF-8");
-        return decrypted;
+        return new String(decryptedText, "UTF-8");
     }
 
-    public static SecretKey getSecretKey(String password, String salt) throws Exception {
+    private static SecretKey getSecretKey(String password, String salt) throws Exception {
         PBEKeySpec pbeKeySpec = new PBEKeySpec(password.toCharArray(), HexEncoder.toByte(salt), PBE_ITERATION_COUNT, 256);
         SecretKeyFactory factory = SecretKeyFactory.getInstance(PBE_ALGORITHM, PROVIDER);
         SecretKey tmp = factory.generateSecret(pbeKeySpec);
-        SecretKey secret = new SecretKeySpec(tmp.getEncoded(), SECRET_KEY_ALGORITHM);
-        return secret;
+        return new SecretKeySpec(tmp.getEncoded(), SECRET_KEY_ALGORITHM);
     }
 
-    public static String getHash(String password, String salt) throws Exception {
+    private static String getHash(String password, String salt) throws Exception {
         String input = password + salt;
         MessageDigest md = MessageDigest.getInstance(HASH_ALGORITHM, PROVIDER);
         byte[] out = md.digest(input.getBytes("UTF-8"));
         return HexEncoder.toHex(out);
     }
 
-    public static String generateSalt() throws Exception {
+    @SuppressWarnings("unused")
+    private static String generateSalt() throws Exception {
         SecureRandom random = SecureRandom.getInstance(RANDOM_ALGORITHM);
         byte[] salt = new byte[SALT_LENGTH];
         random.nextBytes(salt);
-        String saltHex = HexEncoder.toHex(salt);
-        return saltHex;
+        return HexEncoder.toHex(salt);
     }
 
     private static byte[] generateIv() throws Exception {
@@ -191,7 +182,7 @@ public class PocketLock {
     }
 
     private static class HexEncoder {
-        public static byte[] toByte(String hex) {
+        static byte[] toByte(String hex) {
             byte[] bytes = new byte[hex.length() / 2];
             for (int index = 0; index < bytes.length; ++index) {
                 bytes[index] = (byte) Integer.parseInt(hex.substring(index * 2, (index + 1) * 2), 16);
@@ -199,10 +190,10 @@ public class PocketLock {
             return bytes;
         }
 
-        public static String toHex(byte[] bytes) {
+        static String toHex(byte[] bytes) {
             StringBuilder sb = new StringBuilder();
-            for (int index = 0; index < bytes.length; ++index) {
-                sb.append(String.format("%02X", bytes[index]));
+            for (byte aByte : bytes) {
+                sb.append(String.format("%02X", aByte));
             }
             return sb.toString();
         }

@@ -1,31 +1,31 @@
 package jp.gr.java_conf.tmatz.mushroom_safeincloud;
 
-public class FieldInfo implements Comparable<FieldInfo> {
+class FieldInfo implements Comparable<FieldInfo> {
     private int mId;
     private String mTitle;
     private String mValue;
     private boolean mIsHidden;
 
-    public FieldInfo(int id, String title, String value, boolean isHidden) {
+    FieldInfo(int id, String title, String value, boolean isHidden) {
         mId = id;
         mTitle = title;
         mValue = value;
         mIsHidden = isHidden;
     }
 
-    public int getId() {
+    int getId() {
         return mId;
     }
 
-    public String getTitle() {
+    String getTitle() {
         return mTitle;
     }
 
-    public String getValue() {
+    String getValue() {
         return mValue;
     }
 
-    public boolean isHidden() {
+    boolean isHidden() {
         return mIsHidden;
     }
 

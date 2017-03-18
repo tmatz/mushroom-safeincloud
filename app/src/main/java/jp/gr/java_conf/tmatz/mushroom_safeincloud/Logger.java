@@ -2,12 +2,12 @@ package jp.gr.java_conf.tmatz.mushroom_safeincloud;
 
 import android.util.Log;
 
-public final class Logger {
-    public static int i(String tag, String message) {
+final class Logger {
+    static int i(String tag, String message) {
         return Log.i(tag, message);
     }
 
-    public static int i(String tag, Object... messages) {
+    static int i(String tag, Object... messages) {
         return Log.i(tag, build(messages));
     }
 

@@ -13,25 +13,25 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class PocketDatabase {
-    public static final String DATABASE_NAME = "wallet.db";
-    public static final String TABLE_ENTRIES = "entries";
-    public static final String TABLE_FIELDS = "fields";
-    public static final String TABLE_GROUPS = "groups";
-    public static final String TABLE_GROUPFIELDS = "groupfields";
-    public static final String COL_ID = "_id";
-    public static final String COL_TITLE = "title";
-    public static final String COL_NOTE = "note";
-    public static final String COL_ENTRY_ID = "emtry_id";
-    public static final String COL_GROUP_ID = "group_id";
-    public static final String COL_VALUE = "value";
-    public static final String COL_GROUPFIELD_ID = "groupfield_id";
-    public static final String COL_ICON = "icon";
-    public static final String COL_IS_HIDDEN = "is_hodden";
+class PocketDatabase {
+    static final String DATABASE_NAME = "wallet.db";
+    static final String TABLE_ENTRIES = "entries";
+    static final String TABLE_FIELDS = "fields";
+    static final String TABLE_GROUPS = "groups";
+    static final String TABLE_GROUPFIELDS = "groupfields";
+    static final String COL_ID = "_id";
+    static final String COL_TITLE = "title";
+    static final String COL_NOTE = "note";
+    static final String COL_ENTRY_ID = "emtry_id";
+    static final String COL_GROUP_ID = "group_id";
+    static final String COL_VALUE = "value";
+    static final String COL_GROUPFIELD_ID = "groupfield_id";
+    static final String COL_ICON = "icon";
+    static final String COL_IS_HIDDEN = "is_hodden";
 
     private static SQLiteDatabase sDatabase;
 
-    public static boolean isReadable() {
+    static boolean isReadable() {
         if (!Utilities.isExternalStorageReadable()) {
             return false;
         }
@@ -39,11 +39,8 @@ public class PocketDatabase {
         File dbFile = new File(
                 Environment.getExternalStorageDirectory(),
                 PocketDatabase.DATABASE_NAME);
-        if (!dbFile.exists() || !dbFile.canRead()) {
-            return false;
-        }
 
-        return true;
+        return dbFile.exists() && !dbFile.canRead();
     }
 
     private synchronized static SQLiteDatabase openDatabase() {
@@ -65,7 +62,7 @@ public class PocketDatabase {
         return sDatabase;
     }
 
-    public synchronized static List<GroupInfo> readGroups(Context context, PocketLock pocketLock) {
+    synchronized static List<GroupInfo> readGroups(Context context, PocketLock pocketLock) {
         Validate.notNull(context);
         Validate.notNull(pocketLock);
 
@@ -75,7 +72,7 @@ public class PocketDatabase {
             return null;
         }
 
-        ArrayList<GroupInfo> items = new ArrayList<GroupInfo>();
+        ArrayList<GroupInfo> items = new ArrayList<>();
 
         Cursor c = database.rawQuery("select _id, title from groups", null);
         while (c.moveToNext())
@@ -90,7 +87,7 @@ public class PocketDatabase {
         return items;
     }
 
-    public synchronized static List<EntryInfo> readEntries(Context context, PocketLock pocketLock, String groupId) {
+    synchronized static List<EntryInfo> readEntries(Context context, PocketLock pocketLock, String groupId) {
         Validate.notNull(context);
         Validate.notNull(pocketLock);
 
@@ -125,7 +122,7 @@ public class PocketDatabase {
         return items;
     }
 
-    public synchronized static List<FieldInfo> readFields(Context context, PocketLock pocketLock, String entryId) {
+    synchronized static List<FieldInfo> readFields(Context context, PocketLock pocketLock, String entryId) {
         Validate.notNull(context);
         Validate.notNull(pocketLock);
         Validate.notNull(entryId);
