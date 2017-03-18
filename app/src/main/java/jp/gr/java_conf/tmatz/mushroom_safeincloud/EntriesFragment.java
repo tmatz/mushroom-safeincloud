@@ -1,12 +1,6 @@
 package jp.gr.java_conf.tmatz.mushroom_safeincloud;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
@@ -19,6 +13,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+
+import java.util.List;
 
 public class EntriesFragment extends CustomListFragment
 	implements
@@ -139,37 +135,8 @@ public class EntriesFragment extends CustomListFragment
 				return null;
 			}
 
-			SQLiteDatabase database = PocketDatabase.openDatabase();
-			List<EntryInfo> items = new ArrayList<EntryInfo>();
-
 			int groupId = mArgs.getInt(ARG_GROUP_ID);
-			Cursor c;
-			if (groupId == -1)
-			{
-				c = database.rawQuery("select _id, title from entries", null);
-			}
-			else
-			{
-				c = database.rawQuery(
-					"select _id, title from entries where group_id = "
-							+ groupId,
-					null);
-			}
-
-			if (c.moveToFirst())
-			{
-				do
-				{
-					items.add(new EntryInfo(c.getInt(0), pocketLock.decrypt(c
-						.getString(1))));
-				} while (c.moveToNext());
-			}
-
-			c.close();
-
-			Collections.sort(items);
-
-			return items;
+			return PocketDatabase.readEntries(getContext(), pocketLock, groupId);
 		}
 	}
 

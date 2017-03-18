@@ -1,19 +1,12 @@
 package jp.gr.java_conf.tmatz.mushroom_safeincloud;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.SearchView;
-import android.text.TextUtils;
 import android.text.method.HideReturnsTransformationMethod;
 import android.text.method.PasswordTransformationMethod;
 import android.text.method.TransformationMethod;
@@ -26,6 +19,8 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import java.util.List;
 
 public class FieldsFragment extends CustomListFragment
 	implements
@@ -181,53 +176,9 @@ public class FieldsFragment extends CustomListFragment
 				return null;
 			}
 
-			SQLiteDatabase database = PocketDatabase.openDatabase();
-			List<FieldInfo> items = new ArrayList<FieldInfo>();
-
 			int entryId = mArgs.getInt(ARG_ENTRY_ID);
-			{
-				Cursor c = database.rawQuery(
-					"select _id, title, value, is_hidden from fields where entry_id = "
-							+ entryId,
-					null);
-				while (c.moveToNext())
-				{
-					FieldInfo data = new FieldInfo(
-						c.getInt(0),
-						pocketLock.decrypt(c.getString(1)),
-						pocketLock.decrypt(c.getString(2)),
-						c.getInt(3) != 0);
 
-					if (!TextUtils.isEmpty(data.value))
-					{
-						items.add(data);
-					}
-				}
-				c.close();
-			}
-
-			Collections.sort(items);
-
-			{
-				Cursor c = database.rawQuery(
-					"select _id, notes from entries where _id = " + entryId,
-					null);
-				if (c.moveToFirst())
-				{
-					FieldInfo data = new FieldInfo(-1, getContext()
-						.getResources()
-						.getString(R.string.notes), pocketLock.decrypt(c
-						.getString(1)), false);
-
-					if (!TextUtils.isEmpty(data.value))
-					{
-						items.add(data);
-					}
-				}
-				c.close();
-			}
-
-			return items;
+			return PocketDatabase.readFields(getContext(), pocketLock, entryId);
 		}
 	}
 

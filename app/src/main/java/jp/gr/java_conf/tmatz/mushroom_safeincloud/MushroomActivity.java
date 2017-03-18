@@ -3,8 +3,6 @@ package jp.gr.java_conf.tmatz.mushroom_safeincloud;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -23,7 +21,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class MushroomActivity
@@ -465,25 +462,12 @@ implements OnListItemSelectedListener, LoginFragment.DialogListener
 		public List<GroupInfo> loadInBackground()
 		{
 			PocketLock pocketLock = PocketLock.getPocketLock(mPackageName);
-			SQLiteDatabase database = PocketDatabase.openDatabase();
-			if (pocketLock == null || database == null)
+			if (pocketLock == null)
 			{
 				return null;
 			}
 			
-			ArrayList<GroupInfo> items = new ArrayList<GroupInfo>();
-			
-			Cursor c = database.rawQuery("select _id, title from groups", null);
-			while (c.moveToNext())
-			{
-				items.add(new GroupInfo(c.getInt(0), pocketLock.decrypt(c.getString(1))));
-			}
-			c.close();
-
-			Collections.sort(items);
-			
-			items.add(0, new GroupInfo(-1, getContext().getString(R.string.all_entries)));
-			return items;
+			return PocketDatabase.readGroups(getContext(), pocketLock);
 		}
 	}
 }
