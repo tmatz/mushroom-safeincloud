@@ -3,7 +3,9 @@ package jp.gr.java_conf.tmatz.mushroom_safeincloud;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.DocumentsContract;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
@@ -18,7 +20,6 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.widget.ArrayAdapter;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +29,7 @@ public class MushroomActivity extends ActionBarActivity
     public static final String ACTION_INTERCEPT = "com.adamrocker.android.simeji.ACTION_INTERCEPT";
     public static final String EXTRA_REPLACE_KEY = "replace_key";
 
+    public static final String STATE_DATABASE_URI = "database_uri";
     public static final String STATE_ENTRY_ID = "entry_id";
     public static final String STATE_GROUP_ID = "group_id";
     public static final String STATE_FRAGMENT_ARGUMENTS = "state_fragment_arguments";
@@ -37,7 +39,9 @@ public class MushroomActivity extends ActionBarActivity
     private static final String ARG_POSITION = "position";
     private static final String ARG_TAG = "tag";
     private static final int LOADER_GROUP_LIST = 0;
+    private static final int REQUEST_OPEN_DOCUMENT = 1;
 
+    private Uri mDatabaseUri;
     private String mGroupId = "";
     private String mEntryId = "";
     private String mCallingPackage;
@@ -50,6 +54,7 @@ public class MushroomActivity extends ActionBarActivity
         int currentItem = mPager.getCurrentItem();
         SharedPreferences pref = getPreferences(MODE_PRIVATE);
         pref.edit()
+                .putString(STATE_DATABASE_URI, mDatabaseUri != null ? mDatabaseUri.toString() : "")
                 .putString(STATE_GROUP_ID, mGroupId)
                 .putString(STATE_ENTRY_ID, (currentItem >= 1) ? mEntryId : "")
                 .commit();
@@ -60,6 +65,7 @@ public class MushroomActivity extends ActionBarActivity
         Logger.i(TAG, "onSaveInstanceState", "group", mGroupId, "entry", mEntryId);
         super.onSaveInstanceState(outState);
 
+        outState.putString(STATE_DATABASE_URI, mDatabaseUri != null ? mDatabaseUri.toString() : "");
         outState.putString(STATE_GROUP_ID, mGroupId);
         outState.putString(STATE_ENTRY_ID, mEntryId);
         outState.putParcelableArrayList(STATE_FRAGMENT_ARGUMENTS, mFragmentArguments);
@@ -67,14 +73,17 @@ public class MushroomActivity extends ActionBarActivity
 
     private void restoreInstanceState(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
+            setDatabase(savedInstanceState.getString(STATE_DATABASE_URI, ""));
             mGroupId = savedInstanceState.getString(STATE_GROUP_ID, "");
             mEntryId = savedInstanceState.getString(STATE_ENTRY_ID, "");
+
             mFragmentArguments = savedInstanceState.getParcelableArrayList(STATE_FRAGMENT_ARGUMENTS);
             if (mPagerAdapter != null) {
                 mPagerAdapter.notifyDataSetChanged();
             }
         } else {
             SharedPreferences pref = getPreferences(MODE_PRIVATE);
+            setDatabase(pref.getString(STATE_DATABASE_URI, ""));
             mGroupId = pref.getString(STATE_GROUP_ID, "");
             mEntryId = pref.getString(STATE_ENTRY_ID, "");
 
@@ -87,18 +96,26 @@ public class MushroomActivity extends ActionBarActivity
         Logger.i(TAG, "restoreInstanceState", "group", mGroupId, "entry", mEntryId);
     }
 
+    private void setDatabase(String databaseUri) {
+        if (databaseUri == null || databaseUri.isEmpty()) {
+            mDatabaseUri = null;
+        } else {
+            mDatabaseUri = Uri.parse(databaseUri);
+        }
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         Logger.i(TAG, "onCreate", (savedInstanceState != null) ? "with state" : null);
         super.onCreate(savedInstanceState);
 
-        if (!PocketDatabase.isReadable()) {
-            Log.e(TAG, "pocket database is unreadable");
-            Toast.makeText(this, R.string.cant_open_pocket, Toast.LENGTH_SHORT).show();
-            setResult(RESULT_CANCELED);
-            finish();
-            return;
-        }
+//        if (!PocketDatabase.isReadable()) {
+//            Log.e(TAG, "pocket database is unreadable");
+//            Toast.makeText(this, R.string.cant_open_pocket, Toast.LENGTH_SHORT).show();
+//            setResult(RESULT_CANCELED);
+//            finish();
+//            return;
+//        }
 
         mCallingPackage = getCallingPackage();
 
@@ -145,11 +162,46 @@ public class MushroomActivity extends ActionBarActivity
 
         restoreInstanceState(savedInstanceState);
 
-        if (PocketLock.getPocketLock(mCallingPackage) != null) {
+        if (mDatabaseUri == null) {
+            askDatabaseUri();
+        } else if (PocketLock.getPocketLock(mCallingPackage) != null) {
             onGetPocketLock();
         } else {
             showLoginDialog();
         }
+    }
+
+    private void askDatabaseUri() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        intent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        startActivityForResult(intent, REQUEST_OPEN_DOCUMENT);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_OPEN_DOCUMENT:
+                if (resultCode == RESULT_OK && data != null) {
+                    openDatabase(data.getData());
+                }
+                break;
+
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+    private void openDatabase(Uri databaseUri) {
+        if (DocumentsContract.isDocumentUri(this, databaseUri)) {
+            return;
+        }
+        getContentResolver().takePersistableUriPermission(databaseUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        mDatabaseUri = databaseUri;
+
+        showLoginDialog();
     }
 
     private void onGetPocketLock() {
