@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="hello">SafeInCloud Mushroom</string>
     <string name="app_name">SafeInCloud Mushroom</string>
     <string name="cant_open_pocket">Can not open Pocket.</string>
     <string name="exception_file_not_found">Pocket file not found.</string>
