@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:orientation="vertical"
+              android:background="@android:color/background_light"
+              android:paddingBottom="10dp"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/password"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
+
+        <EditText
+            android:id="@+id/editText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginTop="7dp"
+            android:ems="10"
+            android:gravity="fill_horizontal"
+            android:inputType="textPassword"
+            android:focusable="false"
+            app:layout_constraintHorizontal_bias="0.42"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@+id/buttonDelete"
+            app:layout_constraintTop_toBottomOf="@+id/textView3"
+            />
+
+        <android.support.v7.widget.AppCompatImageButton
+            android:id="@+id/buttonDelete"
+            style="@style/KeyButton"
+            android:tint="@android:color/black"
+            app:srcCompat="@android:drawable/ic_input_delete"
+            android:layout_marginRight="8dp"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/editText"
+            android:layout_marginTop="0dp"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/editText"
+            android:layout_marginLeft="0dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            android:layout_marginRight="0dp"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintHorizontal_bias="0.4"
+            android:id="@+id/linearLayout">
+
+            <Button
+                android:id="@+id/button1"
+                style="@style/KeyButton"
+                android:text="1"/>
+
+            <Button
+                android:id="@+id/button2"
+                style="@style/KeyButton"
+                android:text="2"/>
+
+            <Button
+                android:id="@+id/button3"
+                style="@style/KeyButton"
+                android:text="3"/>
+
+            <Button
+                android:id="@+id/button4"
+                style="@style/KeyButton"
+                android:text="4"/>
+
+            <Button
+                android:id="@+id/button5"
+                style="@style/KeyButton"
+                android:text="5"/>
+
+            <Button
+                android:id="@+id/button6"
+                style="@style/KeyButton"
+                android:text="6"/>
+
+            <Button
+                android:id="@+id/button7"
+                style="@style/KeyButton"
+                android:text="7"/>
+
+            <Button
+                android:id="@+id/button8"
+                style="@style/KeyButton"
+                android:text="8"/>
+
+            <Button
+                android:id="@+id/button9"
+                style="@style/KeyButton"
+                android:text="9"/>
+
+            <Button
+                android:id="@+id/button0"
+                style="@style/KeyButton"
+                android:text="0"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            tools:layout_editor_absoluteX="0dp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/linearLayout"
+            android:layout_marginLeft="0dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            android:layout_marginRight="0dp"
+            app:layout_constraintRight_toRightOf="parent"
+            android:id="@+id/linearLayout2">
+
+            <Button
+                android:id="@+id/buttonQ"
+                style="@style/KeyButton"
+                android:text="q"/>
+
+            <Button
+                android:id="@+id/buttonW"
+                style="@style/KeyButton"
+                android:text="w"/>
+
+            <Button
+                android:id="@+id/buttonE"
+                style="@style/KeyButton"
+                android:text="e"/>
+
+            <Button
+                android:id="@+id/buttonR"
+                style="@style/KeyButton"
+                android:text="r"/>
+
+            <Button
+                android:id="@+id/buttonT"
+                style="@style/KeyButton"
+                android:text="t"/>
+
+            <Button
+                android:id="@+id/buttonY"
+                style="@style/KeyButton"
+                android:text="y"/>
+
+            <Button
+                android:id="@+id/buttonU"
+                style="@style/KeyButton"
+                android:text="u"/>
+
+            <Button
+                android:id="@+id/buttonI"
+                style="@style/KeyButton"
+                android:text="i"/>
+
+            <Button
+                android:id="@+id/buttonO"
+                style="@style/KeyButton"
+                android:text="o"/>
+
+            <Button
+                android:id="@+id/buttonP"
+                style="@style/KeyButton"
+                android:text="p"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            tools:layout_editor_absoluteX="0dp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/linearLayout2"
+            android:layout_marginLeft="0dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            android:layout_marginRight="0dp"
+            app:layout_constraintRight_toRightOf="parent"
+            android:id="@+id/linearLayout3">
+
+            <Button
+                android:id="@+id/buttonA"
+                style="@style/KeyButton"
+                android:text="a"/>
+
+            <Button
+                android:id="@+id/buttonS"
+                style="@style/KeyButton"
+                android:text="s"/>
+
+            <Button
+                android:id="@+id/buttonD"
+                style="@style/KeyButton"
+                android:text="d"/>
+
+            <Button
+                android:id="@+id/buttonF"
+                style="@style/KeyButton"
+                android:text="f"/>
+
+            <Button
+                android:id="@+id/buttonG"
+                style="@style/KeyButton"
+                android:text="g"/>
+
+            <Button
+                android:id="@+id/buttonH"
+                style="@style/KeyButton"
+                android:text="h"/>
+
+            <Button
+                android:id="@+id/buttonJ"
+                style="@style/KeyButton"
+                android:text="j"/>
+
+            <Button
+                android:id="@+id/buttonK"
+                style="@style/KeyButton"
+                android:text="k"/>
+
+            <Button
+                android:id="@+id/buttonL"
+                style="@style/KeyButton"
+                android:text="l"/>
+        </LinearLayout>
+
+        <android.support.v7.widget.AppCompatImageButton
+            android:id="@+id/buttonShift"
+            style="@style/KeyButton"
+            app:srcCompat="@drawable/ic_menu_camera"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/linearLayout3"
+            android:layout_marginLeft="8dp"
+            app:layout_constraintLeft_toLeftOf="parent"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/linearLayout3"
+            android:id="@+id/linearLayout4"
+            app:layout_constraintRight_toLeftOf="@+id/buttonReturn"
+            android:layout_marginRight="0dp"
+            app:layout_constraintLeft_toRightOf="@+id/buttonShift"
+            android:layout_marginLeft="8dp">
+
+            <Button
+                android:id="@+id/buttonZ"
+                style="@style/KeyButton"
+                android:text="z"/>
+
+            <Button
+                android:id="@+id/buttonX"
+                style="@style/KeyButton"
+                android:text="x"/>
+
+            <Button
+                android:id="@+id/buttonC"
+                style="@style/KeyButton"
+                android:text="c"/>
+
+            <Button
+                android:id="@+id/buttonV"
+                style="@style/KeyButton"
+                android:text="v"/>
+
+            <Button
+                android:id="@+id/buttonB"
+                style="@style/KeyButton"
+                android:text="b"/>
+
+            <Button
+                android:id="@+id/buttonN"
+                style="@style/KeyButton"
+                android:text="n"/>
+
+            <Button
+                android:id="@+id/buttonM"
+                style="@style/KeyButton"
+                android:text="m"/>
+
+        </LinearLayout>
+
+        <android.support.v7.widget.AppCompatImageButton
+            android:id="@+id/buttonReturn"
+            style="@style/KeyButton"
+            android:tint="@android:color/black"
+            app:layout_constraintTop_toBottomOf="@+id/linearLayout3"
+            app:srcCompat="@android:drawable/ic_lock_idle_lock"
+            android:layout_marginTop="8dp"
+            android:layout_marginRight="8dp"
+            app:layout_constraintRight_toRightOf="parent"/>
+
+    </android.support.constraint.ConstraintLayout>
+
+</LinearLayout>
