@@ -1,5 +1,7 @@
 package jp.gr.java_conf.tmatz.safeincloud_db;
 
+import android.util.Log;
+
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -18,34 +20,62 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class DatabaseReader {
+    private static final String TAG = DatabaseReader.class.getSimpleName();
+    private static final int MAGIC = 1285;
 
-    public InputStream read(InputStream inputStream) throws Exception {
+    private class Header {
+        public short magic;
+        public byte sver;
+        public byte[] salt;
+        public byte[] iv;
+        public byte[] salt2;
+        public byte[] block;
+    }
+
+    private Header readHeader(InputStream inputStream) throws Exception {
         DataInputStream dis = new DataInputStream(inputStream);
+        Header header = new Header();
 
-        short magic = dis.readShort();
-        if (magic != 1285) {
+        header.magic = dis.readShort();
+        if (header.magic != MAGIC) {
             throw new RuntimeException("unexpected magic value");
         }
 
-        byte sver = dis.readByte();
-        if (sver != 1) {
+        header.sver = dis.readByte();
+        if (header.sver != 1) {
             throw new RuntimeException("unexpected sver value");
         }
 
-        byte[] salt = this.readByteArray(dis);
-        byte[] iv = this.readByteArray(dis);
-        byte[] salt2 = this.readByteArray(dis);
-        byte[] block = this.readByteArray(dis);
+        header.salt = this.readByteArray(dis);
+        header.iv = this.readByteArray(dis);
+        header.salt2 = this.readByteArray(dis);
+        header.block = this.readByteArray(dis);
 
-        String passwordString = "password";
-        byte[] password = new byte[passwordString.length()];
-        for (int i = 0; i < password.length; i++) {
-            password[i] = (byte) passwordString.charAt(i);
+        return header;
+    }
+
+    public boolean valid(InputStream inputStream) {
+        try {
+            return readHeader(inputStream) != null;
+        } catch (Exception e) {
+            Log.d(TAG, "can not read header", e);
+            return false;
         }
-        Key key = this.getKey(password, salt, 10000);
+    }
 
-        Cipher cipher = this.getCipher(key, iv);
-        byte[] secrets = cipher.doFinal(block);
+    public InputStream read(InputStream inputStream, String password) throws Exception {
+        Header header = readHeader(inputStream);
+
+        DataInputStream dis = new DataInputStream(inputStream);
+
+        byte[] passwordBytes = new byte[password.length()];
+        for (int i = 0; i < passwordBytes.length; i++) {
+            passwordBytes[i] = (byte) password.charAt(i);
+        }
+        Key key = this.getKey(passwordBytes, header.salt, 10000);
+
+        Cipher cipher = this.getCipher(key, header.iv);
+        byte[] secrets = cipher.doFinal(header.block);
 
         DataInputStream dis2 = new DataInputStream(
                 new ByteArrayInputStream(secrets));
@@ -58,7 +88,7 @@ public class DatabaseReader {
 
         dis2.close();
 
-        Key key3 = this.getKey(pass2, salt2, 1000);
+        Key key3 = this.getKey(pass2, header.salt2, 1000);
 
         if (!Arrays.equals(check, key3.getEncoded())) {
             throw new Exception();

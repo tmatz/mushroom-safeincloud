@@ -1,7 +1,5 @@
 package jp.gr.java_conf.tmatz.safeincloud_db;
 
-import org.apache.commons.lang.StringUtils;
-
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +33,7 @@ public class Card {
     private int mId; // id
     private String mSymbol; // symbol
     private String mColor; // color
-    private boolean mTemplate; // template
+    private boolean mIsTemplate; // template
     private String mType; // type
     private boolean mStar; // star
     private long mTimestamp; // time_stamp
@@ -47,8 +45,12 @@ public class Card {
     public Card() {
     }
 
-    public Card(String title) {
-        mTitle = StringUtils.trimToEmpty(title);
+    public boolean isTemplate() {
+        return mIsTemplate;
+    }
+
+    public void setTemplate(boolean isTemplate) {
+        mIsTemplate = isTemplate;
     }
 
     public void addField(Field field) {

@@ -17,7 +17,7 @@ public class ExampleUnitTest {
         try (InputStream inputStream = new BufferedInputStream(
                 new FileInputStream("database/src/androidTest/res/raw/safeincloud.db"))) {
             DatabaseReader databaseReader = new DatabaseReader();
-            try (InputStream content = databaseReader.read(inputStream)) {
+            try (InputStream content = databaseReader.read(inputStream, "password")) {
                 DatabaseParser parser = new DatabaseParser();
                 Database database = parser.parse(content);
 

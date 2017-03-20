@@ -1,7 +1,5 @@
 package jp.gr.java_conf.tmatz.safeincloud_db;
 
-import org.apache.commons.lang.StringUtils;
-
 import java.io.PrintStream;
 
 public class Label {
@@ -13,12 +11,6 @@ public class Label {
     private String mType;
 
     public Label() {
-    }
-
-    public Label(String name, String id, String type) {
-        mName = StringUtils.trimToEmpty(name);
-        mId = StringUtils.trimToEmpty(id);
-        mType = StringUtils.trimToEmpty(type);
     }
 
     public String getName() {

@@ -159,7 +159,7 @@ public class LoginFragment extends DialogFragment {
     private boolean CreatePocketLock(String packageName) {
         synchronized (sMutex) {
             try {
-                mPocketLock = new PocketLock(packageName);
+                mPocketLock = new PocketLock(getContext(), packageName);
                 return true;
             } catch (CryptoException e) {
                 Toast.makeText(getActivity(), e.getId(), Toast.LENGTH_SHORT).show();
@@ -171,7 +171,7 @@ public class LoginFragment extends DialogFragment {
     private void CheckPassword() {
         String password = mPasswordText.getText().toString();
         try {
-            mPocketLock.unlock(password);
+            mPocketLock.unlock(getContext(), password);
             PocketLock.setPocketLock(mPocketLock);
             ok();
         } catch (CryptoException e) {

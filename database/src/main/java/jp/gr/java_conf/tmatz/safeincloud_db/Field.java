@@ -30,13 +30,6 @@ public class Field {
     public Field() {
     }
 
-    public Field(String title, String value, String type)
-    {
-        setTitle(title);
-        setValue(value);
-        setType(type);
-    }
-
     public String getTitle() {
         return mTitle;
     }
@@ -65,6 +58,18 @@ public class Field {
 
     public String getType() {
         return mType;
+    }
+
+    public boolean isSecret() {
+        switch (getType()) {
+            case "one_time_password":
+            case "password":
+            case "pin":
+            case "secret":
+                return true;
+            default:
+                return false;
+        }
     }
 
     public void setType(String type) {

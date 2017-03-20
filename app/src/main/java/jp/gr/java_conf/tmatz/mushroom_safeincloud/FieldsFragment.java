@@ -63,7 +63,7 @@ public class FieldsFragment extends CustomListFragment implements LoaderCallback
                 if (view == null) {
                     LayoutInflater inflater = (LayoutInflater) getContext()
                             .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                    view = inflater.inflate(R.layout.field_list_item, parent);
+                    view = inflater.inflate(R.layout.field_list_item, null);
                 }
 
                 FieldInfo item = getItem(position);

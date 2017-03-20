@@ -22,6 +22,8 @@ public class DatabaseParser {
     private static final String ID = "id";
     private static final String TYPE = "type";
     private static final String TITLE = "title";
+    private static final String TEMPLATE = "template";
+    private static final String TRUE = "true";
 
     public Database parse(InputStream inputStream) {
         try {
@@ -53,11 +55,12 @@ public class DatabaseParser {
                         case CARD:
                             mCard = new Card();
                             mCard.setTitle(attributes.getValue(TITLE));
+                            mCard.setTemplate(TRUE.equals(attributes.getValue(TEMPLATE)));
                             break;
 
                         case FIELD:
                             mField = new Field();
-                            mField.setTitle(attributes.getValue(TITLE));
+                            mField.setTitle(attributes.getValue(NAME));
                             mField.setType(attributes.getValue(TYPE));
                             break;
 

@@ -5,27 +5,37 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.DocumentsContract;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
+import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBar.OnNavigationListener;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
-import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
 import android.widget.ArrayAdapter;
 
+import org.apache.commons.io.IOUtils;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MushroomActivity extends ActionBarActivity
-        implements OnListItemSelectedListener, LoginFragment.DialogListener {
+public class MushroomActivity extends AppCompatActivity
+        implements NavigationView.OnNavigationItemSelectedListener, OnListItemSelectedListener, LoginFragment.DialogListener {
     public static final String ACTION_INTERCEPT = "com.adamrocker.android.simeji.ACTION_INTERCEPT";
     public static final String EXTRA_REPLACE_KEY = "replace_key";
 
@@ -39,7 +49,7 @@ public class MushroomActivity extends ActionBarActivity
     private static final String ARG_POSITION = "position";
     private static final String ARG_TAG = "tag";
     private static final int LOADER_GROUP_LIST = 0;
-    private static final int REQUEST_OPEN_DOCUMENT = 1;
+    private static final int REQUEST_OPEN_DOCUMENT = 100;
 
     private Uri mDatabaseUri;
     private String mGroupId = "";
@@ -49,6 +59,149 @@ public class MushroomActivity extends ActionBarActivity
     private ViewPager mPager;
     private PagerAdapter mPagerAdapter;
     private ArrayAdapter<GroupInfo> mGroupAdapter;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        Logger.i(TAG, "onCreate", (savedInstanceState != null) ? "with state" : null);
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_mushroom);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        });
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.setDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+
+
+//        if (!PocketDatabase.isReadable()) {
+//            Log.e(TAG, "pocket database is unreadable");
+//            Toast.makeText(this, R.string.cant_open_pocket, Toast.LENGTH_SHORT).show();
+//            setResult(RESULT_CANCELED);
+//            finish();
+//            return;
+//        }
+
+        mCallingPackage = getCallingPackage();
+
+        if (mCallingPackage == null) {
+            Intent intent = getIntent();
+            if (ACTION_INTERCEPT.equals(intent.getAction())) {
+                Log.w(TAG, "calling package unknown");
+                {
+                    setResult(RESULT_CANCELED);
+                    finish();
+                    return;
+                }
+            }
+        }
+
+        mGroupAdapter = new ArrayAdapter<>(this, R.layout.support_simple_spinner_dropdown_item);
+        mGroupAdapter.setNotifyOnChange(true);
+
+//        getWindow().setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT);
+//
+        mPager = (ViewPager) findViewById(R.id.pager);
+        mPagerAdapter = new PagerAdapter(getSupportFragmentManager());
+//
+//        actionBar.setListNavigationCallbacks(
+//                mGroupAdapter,
+//                new OnNavigationListener() {
+//                    @Override
+//                    public boolean onNavigationItemSelected(int itemPosition, long itemId)
+//                    {
+//                        GroupInfo groupInfo = mGroupAdapter.getItem(itemPosition);
+//                        if (groupInfo != null) {
+//                            if (!mGroupId.equals(groupInfo.getId())) {
+//                                mGroupId = groupInfo.getId();
+//                                setPage(0, EntriesFragment.TAG, EntriesFragment.newArgument(mCallingPackage, mGroupId, null), false);
+//                            }
+//                        }
+//                        return true;
+//                    }
+//                });
+//
+        restoreInstanceState(savedInstanceState);
+    }
+
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_mushroom_activity, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+
+        if (item.getGroupId() == R.id.nav_group) {
+            GroupInfo groupInfo = mGroupAdapter.getItem(id);
+            if (groupInfo != null) {
+                if (!mGroupId.equals(groupInfo.getId())) {
+                    mGroupId = groupInfo.getId();
+                    setPage(0, EntriesFragment.TAG, EntriesFragment.newArgument(mCallingPackage, mGroupId, null), false);
+                }
+            }
+        } else {
+            /*
+            if (id == R.id.nav_camera) {
+            } else if (id == R.id.nav_gallery) {
+
+            } else if (id == R.id.nav_slideshow) {
+
+            } else if (id == R.id.nav_manage) {
+
+            } else */
+            if (id == R.id.nav_share) {
+            } else if (id == R.id.nav_send) {
+                askDatabaseUri();
+            }
+        }
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
 
     private void saveInstanceStateIntoPref() {
         int currentItem = mPager.getCurrentItem();
@@ -104,84 +257,17 @@ public class MushroomActivity extends ActionBarActivity
         }
     }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        Logger.i(TAG, "onCreate", (savedInstanceState != null) ? "with state" : null);
-        super.onCreate(savedInstanceState);
-
-//        if (!PocketDatabase.isReadable()) {
-//            Log.e(TAG, "pocket database is unreadable");
-//            Toast.makeText(this, R.string.cant_open_pocket, Toast.LENGTH_SHORT).show();
-//            setResult(RESULT_CANCELED);
-//            finish();
-//            return;
-//        }
-
-        mCallingPackage = getCallingPackage();
-
-        if (mCallingPackage == null) {
-            Intent intent = getIntent();
-            if (ACTION_INTERCEPT.equals(intent.getAction())) {
-                Log.w(TAG, "calling package unkown");
-                {
-                    setResult(RESULT_CANCELED);
-                    finish();
-                    return;
-                }
-            }
-        }
-
-        ActionBar actionBar = getSupportActionBar();
-        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
-
-        mGroupAdapter = new ArrayAdapter<>(this, R.layout.support_simple_spinner_dropdown_item);
-        mGroupAdapter.setNotifyOnChange(true);
-
-        setContentView(R.layout.mushroom_activity);
-        getWindow().setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT);
-
-        mPager = (ViewPager) findViewById(R.id.pager);
-        mPagerAdapter = new PagerAdapter(getSupportFragmentManager());
-
-        actionBar.setListNavigationCallbacks(
-                mGroupAdapter,
-                new OnNavigationListener() {
-                    @Override
-                    public boolean onNavigationItemSelected(int itemPosition, long itemId)
-                    {
-                        GroupInfo groupInfo = mGroupAdapter.getItem(itemPosition);
-                        if (groupInfo != null) {
-                            if (!mGroupId.equals(groupInfo.getId())) {
-                                mGroupId = groupInfo.getId();
-                                setPage(0, EntriesFragment.TAG, EntriesFragment.newArgument(mCallingPackage, mGroupId, null), false);
-                            }
-                        }
-                        return true;
-                    }
-                });
-
-        restoreInstanceState(savedInstanceState);
-
-        if (mDatabaseUri == null) {
-            askDatabaseUri();
-        } else if (PocketLock.getPocketLock(mCallingPackage) != null) {
-            onGetPocketLock();
-        } else {
-            showLoginDialog();
-        }
-    }
-
     private void askDatabaseUri() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        intent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
         startActivityForResult(intent, REQUEST_OPEN_DOCUMENT);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Logger.i(TAG, "onActivityResult", "requestCode", requestCode, "resultCode", resultCode);
         switch (requestCode) {
             case REQUEST_OPEN_DOCUMENT:
                 if (resultCode == RESULT_OK && data != null) {
@@ -194,14 +280,29 @@ public class MushroomActivity extends ActionBarActivity
         }
     }
 
-    private void openDatabase(Uri databaseUri) {
-        if (DocumentsContract.isDocumentUri(this, databaseUri)) {
-            return;
-        }
-        getContentResolver().takePersistableUriPermission(databaseUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        mDatabaseUri = databaseUri;
+    private void openDatabase(Uri uri) {
+        if (mDatabaseUri != null) {
+            if (mDatabaseUri.equals(uri)) {
+                return;
+            }
 
-        showLoginDialog();
+            getContentResolver().releasePersistableUriPermission(mDatabaseUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        }
+
+        File filesDir = getFilesDir();
+        File databaseFile = new File(filesDir, "database.dat");
+
+        try (InputStream is = getContentResolver().openInputStream(uri);
+             FileOutputStream os = new FileOutputStream(databaseFile)) {
+            IOUtils.copy(is, os);
+            getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            mDatabaseUri = uri;
+
+            // showLoginDialog();
+        } catch (Exception ex) {
+            Log.d(TAG, "safe database failed", ex);
+            mDatabaseUri = null;
+        }
     }
 
     private void onGetPocketLock() {
@@ -211,18 +312,22 @@ public class MushroomActivity extends ActionBarActivity
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_mushroom_activity, menu);
-        return true;
-    }
-
-    @Override
     public void onResume() {
         Log.i(TAG, "onResume");
 
         super.onResume();
         LockTimer.resetTimer();
+
+        if (mDatabaseUri == null) {
+            Logger.i(TAG, "    invoke askDatabaseUri");
+            askDatabaseUri();
+        } else if (PocketLock.getPocketLock(mCallingPackage) != null) {
+            Logger.i(TAG, "    invoke onGetPocketLock");
+            onGetPocketLock();
+        } else {
+            Logger.i(TAG, "    invoke showLoginDialog");
+            showLoginDialog();
+        }
     }
 
     @Override
@@ -394,7 +499,7 @@ public class MushroomActivity extends ActionBarActivity
         }
     }
 
-    private final LoaderCallbacks<List<GroupInfo>> mGroupInfoLoaderCallbacks = new LoaderCallbacks<List<GroupInfo>>() {
+    private final LoaderManager.LoaderCallbacks<List<GroupInfo>> mGroupInfoLoaderCallbacks = new LoaderManager.LoaderCallbacks<List<GroupInfo>>() {
         @Override
         public Loader<List<GroupInfo>> onCreateLoader(int id, Bundle arg) {
             Logger.i(TAG, "LoaderCallbacks.onCreateLoader");
@@ -415,12 +520,21 @@ public class MushroomActivity extends ActionBarActivity
                 }
             }
 
-            int count = mGroupAdapter.getCount();
-            for (int i = 0; i < count; ++i) {
-                if (mGroupAdapter.getItem(i).getId() == mGroupId) {
-                    getSupportActionBar().setSelectedNavigationItem(i);
+            NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+            Menu menu = navigationView.getMenu();
+            if (data != null) {
+                for (int i = 0; i < data.size(); i++) {
+                    GroupInfo item = data.get(i);
+                    menu.add(R.id.nav_group, i, 0, item.getTitle());
                 }
             }
+
+//            int count = mGroupAdapter.getCount();
+//            for (int i = 0; i < count; ++i) {
+//                if (mGroupAdapter.getItem(i).getId() == mGroupId) {
+//                    getSupportActionBar().setSelectedNavigationItem(i);
+//                }
+//            }
         }
 
         @Override

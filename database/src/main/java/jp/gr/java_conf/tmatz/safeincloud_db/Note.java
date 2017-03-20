@@ -1,7 +1,5 @@
 package jp.gr.java_conf.tmatz.safeincloud_db;
 
-import org.apache.commons.lang.StringUtils;
-
 import java.io.PrintStream;
 
 public class Note {
@@ -9,10 +7,6 @@ public class Note {
     private String mText;
 
     public Note() {
-    }
-
-    public Note(String text) {
-        mText = StringUtils.trimToEmpty(text);
     }
 
     public String getText() {

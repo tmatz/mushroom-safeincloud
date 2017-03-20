@@ -1,11 +1,24 @@
 package jp.gr.java_conf.tmatz.mushroom_safeincloud;
 
-import android.os.*;
-import android.util.*;
-import java.io.*;
-import java.security.*;
-import javax.crypto.*;
-import javax.crypto.spec.*;
+import android.content.Context;
+import android.util.Log;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
+
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
+
+import jp.gr.java_conf.tmatz.safeincloud_db.Database;
+import jp.gr.java_conf.tmatz.safeincloud_db.DatabaseParser;
+import jp.gr.java_conf.tmatz.safeincloud_db.DatabaseReader;
 
 class PocketLock {
     private static final String TAG = "PocketLock";
@@ -27,6 +40,8 @@ class PocketLock {
     private String mEncryptionSalt;
     private String mPackageName;
     private SecretKey mSecretKey;
+
+    private Database mDatabase;
 
     private static void expire() {
         Log.i(TAG, "expire");
@@ -56,27 +71,38 @@ class PocketLock {
         sPocketLock = lock;
     }
 
-    PocketLock(String packageName) throws CryptoException {
-        if (!Utilities.isExternalStorageReadable()) {
-            throw new CryptoException(R.string.exception_storage_not_readable);
-        }
-
-        File dir = Environment.getExternalStorageDirectory();
-        File hashFile = new File(dir, HASHFILE_NAME);
-        if (!hashFile.exists()) {
-            throw new CryptoException(R.string.exception_file_not_found);
-        }
-
-        try (BufferedReader br = new BufferedReader(new FileReader(hashFile))) {
-            mPasswordHash = br.readLine();
-            br.readLine(); // version
-            br.readLine(); // encryptionMethod
-            mPasswordSalt = br.readLine();
-            mEncryptionSalt = br.readLine();
+    PocketLock(Context context, String packageName) throws CryptoException {
+        File dir = context.getFilesDir();
+        File dbFile = new File(dir, "database.dat");
+        try (InputStream is = new FileInputStream(dbFile)) {
+            if (!new DatabaseReader().valid(is)) {
+                throw new CryptoException(R.string.exception_file_can_not_read);
+            }
             mPackageName = packageName;
         } catch (Exception e) {
-            throw new CryptoException(R.string.exception_file_can_not_read);
+            throw new CryptoException(R.string.exception_file_can_not_read, e);
         }
+
+//        if (!Utilities.isExternalStorageReadable()) {
+//            throw new CryptoException(R.string.exception_storage_not_readable);
+//        }
+
+//        File dir = Environment.getExternalStorageDirectory();
+//        File hashFile = new File(dir, HASHFILE_NAME);
+//        if (!hashFile.exists()) {
+//            throw new CryptoException(R.string.exception_file_not_found);
+//        }
+//
+//        try (BufferedReader br = new BufferedReader(new FileReader(hashFile))) {
+//            mPasswordHash = br.readLine();
+//            br.readLine(); // version
+//            br.readLine(); // encryptionMethod
+//            mPasswordSalt = br.readLine();
+//            mEncryptionSalt = br.readLine();
+//            mPackageName = packageName;
+//        } catch (Exception e) {
+//            throw new CryptoException(R.string.exception_file_can_not_read);
+//        }
     }
 
     @SuppressWarnings("unused")
@@ -84,16 +110,29 @@ class PocketLock {
         return mPackageName;
     }
 
-    void unlock(String password) throws CryptoException {
-        mSecretKey = getDatabaseSecretKey(password);
+    Database getDatabase() {
+        return mDatabase;
+    }
+
+    void unlock(Context context, String password) throws CryptoException {
+        // mSecretKey = getDatabaseSecretKey(password);
+        try {
+            File dir = context.getFilesDir();
+            File dbFile = new File(dir, "database.dat");
+            mDatabase = new DatabaseParser().parse(new DatabaseReader().read(new FileInputStream(dbFile), password));
+        } catch (Exception ex) {
+            Log.d(TAG, "cant open database", ex);
+            throw new CryptoException(R.string.exception_file_can_not_read, ex);
+        }
     }
 
     String decrypt(String encrypted) throws CryptoException {
-        try {
-            return decrypt(mSecretKey, encrypted);
-        } catch (Exception e) {
-            throw new CryptoException(R.string.exception_decryption_failed, e);
-        }
+        return encrypted;
+//        try {
+//            return decrypt(mSecretKey, encrypted);
+//        } catch (Exception e) {
+//            throw new CryptoException(R.string.exception_decryption_failed, e);
+//        }
     }
 
     private SecretKey getDatabaseSecretKey(String password) throws CryptoException {

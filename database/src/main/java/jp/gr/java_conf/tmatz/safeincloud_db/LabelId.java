@@ -1,7 +1,5 @@
 package jp.gr.java_conf.tmatz.safeincloud_db;
 
-import org.apache.commons.lang.StringUtils;
-
 import java.io.PrintStream;
 
 public class LabelId {
@@ -9,10 +7,6 @@ public class LabelId {
     private String mId;
 
     public LabelId() {
-    }
-
-    public LabelId(String id) {
-        mId = StringUtils.trimToEmpty(id);
     }
 
     public String getId() {
