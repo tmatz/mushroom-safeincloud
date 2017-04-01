@@ -16,9 +16,9 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import jp.gr.java_conf.tmatz.safeincloud_db.Database;
-import jp.gr.java_conf.tmatz.safeincloud_db.DatabaseParser;
-import jp.gr.java_conf.tmatz.safeincloud_db.DatabaseReader;
+import jp.gr.java_conf.tmatz.mushroom_safeincloud.db.Database;
+import jp.gr.java_conf.tmatz.mushroom_safeincloud.db.DatabaseParser;
+import jp.gr.java_conf.tmatz.mushroom_safeincloud.db.DatabaseReader;
 
 class PocketLock {
     private static final String TAG = "PocketLock";

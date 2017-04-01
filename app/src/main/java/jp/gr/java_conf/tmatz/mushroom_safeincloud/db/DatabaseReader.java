@@ -1,4 +1,4 @@
-package jp.gr.java_conf.tmatz.safeincloud_db;
+package jp.gr.java_conf.tmatz.mushroom_safeincloud.db;
 
 import android.util.Log;
 
